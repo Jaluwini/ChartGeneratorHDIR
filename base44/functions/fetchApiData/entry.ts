@@ -4,16 +4,6 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
-    let user = null;
-    try {
-      user = await base44.auth.me();
-    } catch (_) {
-      // auth check failed – still allow the proxy if called from the app
-    }
-    if (!user) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const { url, headers: extraHeaders } = await req.json();
 
     if (!url) {
