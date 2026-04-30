@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Download, Copy, Check, Code2, FileCode, Image } from "lucide-react";
+import { Download, Copy, Check, Code2, FileCode, Image, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { configToHTML } from "@/lib/chartUtils";
 
@@ -40,9 +40,10 @@ function DownloadButton({ content, filename, mimeType, label, icon: IconComp }) 
 const TABS = [
   { id: "json", label: "JSON", icon: Code2 },
   { id: "html", label: "HTML", icon: FileCode },
+  { id: "api", label: "API", icon: Share2 },
 ];
 
-export default function ExportPanel({ hcConfig, chartRef, apiSource }) {
+export default function ExportPanel({ hcConfig, chartRef, apiSource, savedChartId }) {
   const [tab, setTab] = useState("json");
 
   if (!hcConfig) {
@@ -139,11 +140,78 @@ export default function ExportPanel({ hcConfig, chartRef, apiSource }) {
       </div>
 
       {/* Code view */}
-      <div className="flex-1 rounded-xl border border-border overflow-auto bg-[hsl(222,47%,8%)] dark:bg-[hsl(222,47%,6%)]">
-        <pre className="code-block text-[hsl(210,40%,85%)] p-4 text-[0.72rem]">
-          {tab === "json" ? jsonStr : htmlStr}
-        </pre>
-      </div>
+      {tab !== "api" && (
+        <div className="flex-1 rounded-xl border border-border overflow-auto bg-[hsl(222,47%,8%)] dark:bg-[hsl(222,47%,6%)]">
+          <pre className="code-block text-[hsl(210,40%,85%)] p-4 text-[0.72rem]">
+            {tab === "json" ? jsonStr : htmlStr}
+          </pre>
+        </div>
+      )}
+
+      {/* API share panel */}
+      {tab === "api" && (
+        <div className="flex-1 space-y-4">
+          {!savedChartId ? (
+            <div className="px-4 py-6 rounded-xl border border-border bg-muted/30 text-center space-y-2">
+              <Share2 className="w-8 h-8 text-muted-foreground/40 mx-auto" />
+              <p className="text-sm font-medium text-foreground">Lagre grafen først</p>
+              <p className="text-xs text-muted-foreground">Trykk «Lagre graf» øverst, så kan du dele den via API.</p>
+            </div>
+          ) : (() => {
+            const appId = window.location.hostname.split(".")[0];
+            const fnUrl = `https://api.base44.app/api/apps/${appId}/functions/getChart`;
+            const curlExample = `curl -X POST "${fnUrl}" \\
+  -H "Content-Type: application/json" \\
+  -d '{"id": "${savedChartId}"}'`;
+            const jsExample = `const res = await fetch("${fnUrl}", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ id: "${savedChartId}" })
+});
+const { hc_config } = await res.json();
+Highcharts.chart("container", hc_config);`;
+
+            return (
+              <div className="space-y-3">
+                {/* Chart ID */}
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Graf-ID</p>
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/40 border border-border">
+                    <code className="text-xs font-mono text-foreground flex-1 select-all">{savedChartId}</code>
+                    <CopyButton text={savedChartId} label="Kopier" />
+                  </div>
+                </div>
+
+                {/* curl */}
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">curl</p>
+                    <CopyButton text={curlExample} label="Kopier" />
+                  </div>
+                  <div className="rounded-xl border border-border overflow-auto bg-[hsl(222,47%,8%)]">
+                    <pre className="code-block text-[hsl(210,40%,85%)] p-4 text-[0.72rem]">{curlExample}</pre>
+                  </div>
+                </div>
+
+                {/* JavaScript */}
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">JavaScript / Highcharts</p>
+                    <CopyButton text={jsExample} label="Kopier" />
+                  </div>
+                  <div className="rounded-xl border border-border overflow-auto bg-[hsl(222,47%,8%)]">
+                    <pre className="code-block text-[hsl(210,40%,85%)] p-4 text-[0.72rem]">{jsExample}</pre>
+                  </div>
+                </div>
+
+                <p className="text-[11px] text-muted-foreground">
+                  Responsen inneholder <code className="font-mono">hc_config</code> — et komplett Highcharts-objekt klart til bruk.
+                </p>
+              </div>
+            );
+          })()}
+        </div>
+      )}
     </div>
   );
 }

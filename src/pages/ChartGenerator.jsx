@@ -84,6 +84,7 @@ export default function ChartGenerator() {
     setValidationError(null);
     setApiSource(null);
     setSelectedIndicator(null);
+    setSavedChartId(null);
     chartRef.current = null;
   };
 
@@ -93,16 +94,18 @@ export default function ChartGenerator() {
 
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [savedChartId, setSavedChartId] = useState(null);
 
   const handleSave = async () => {
     if (!hcConfig) return;
     setSaving(true);
-    await base44.entities.SavedChart.create({
+    const created = await base44.entities.SavedChart.create({
       title: config.title || "Uten tittel",
       hc_config: hcConfig,
       api_source: apiSource,
       chart_type: config.chartType,
     });
+    setSavedChartId(created.id);
     setSaving(false);
     setSaveSuccess(true);
     setTimeout(() => setSaveSuccess(false), 2500);
@@ -262,7 +265,7 @@ export default function ChartGenerator() {
                   exit={{ opacity: 0 }}
                   className="p-4 md:p-6 h-full min-h-[500px] flex flex-col"
                 >
-                  <ExportPanel hcConfig={hcConfig} chartRef={chartRef} apiSource={apiSource} />
+                  <ExportPanel hcConfig={hcConfig} chartRef={chartRef} apiSource={apiSource} savedChartId={savedChartId} />
                 </motion.div>
               )}
             </AnimatePresence>
