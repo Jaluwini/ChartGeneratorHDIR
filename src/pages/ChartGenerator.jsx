@@ -1,0 +1,200 @@
+import { useState, useRef, useCallback } from "react";
+import { buildHighchartsConfig } from "@/lib/chartUtils";
+import { DEFAULT_COLORS } from "@/lib/chartUtils";
+import FileUploader from "@/components/chart/FileUploader";
+import DataTable from "@/components/chart/DataTable";
+import ChartConfig from "@/components/chart/ChartConfig";
+import ChartPreview from "@/components/chart/ChartPreview";
+import ExportPanel from "@/components/chart/ExportPanel";
+import { Button } from "@/components/ui/button";
+import { RefreshCw, BarChart3, Eye, Code2, AlertCircle } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+
+const DEFAULT_CONFIG = {
+  chartType: "column",
+  xAxis: null,
+  yAxes: [],
+  groupBy: "none",
+  title: "",
+  subtitle: "",
+  xAxisTitle: "",
+  yAxisTitle: "",
+  colors: DEFAULT_COLORS,
+  dataLabels: false,
+  legend: true,
+  sortData: "none",
+  decimals: 0,
+  height: 420,
+  width: null,
+  tooltipFormat: "",
+};
+
+const PREVIEW_TABS = [
+  { id: "preview", label: "Preview", icon: Eye },
+  { id: "export", label: "JSON / HTML", icon: Code2 },
+];
+
+export default function ChartGenerator() {
+  const [data, setData] = useState(null);
+  const [columns, setColumns] = useState([]);
+  const [config, setConfig] = useState(DEFAULT_CONFIG);
+  const [activeTab, setActiveTab] = useState("preview");
+  const [validationError, setValidationError] = useState(null);
+  const chartRef = useRef(null);
+
+  const handleDataLoaded = useCallback(({ data: newData, columns: newCols }) => {
+    setData(newData);
+    setColumns(newCols);
+    // Auto-set first string col as X, numeric cols as Y
+    const strCols = newCols.filter(c => c.type === "string");
+    const numCols = newCols.filter(c => c.type === "number");
+    setConfig(prev => ({
+      ...prev,
+      xAxis: strCols[0]?.name || newCols[0]?.name || null,
+      yAxes: numCols.slice(0, 2).map(c => c.name),
+    }));
+    setValidationError(null);
+  }, []);
+
+  const hcConfig = (() => {
+    if (!data || !config.xAxis || !config.yAxes?.length) return null;
+    const result = buildHighchartsConfig(config, data);
+    return result;
+  })();
+
+  const validate = () => {
+    if (!data) return "Please upload data first.";
+    if (!config.xAxis) return "Please select an X-axis column.";
+    if (!config.yAxes || config.yAxes.length === 0) return "Please select at least one Y-value column.";
+    if (!hcConfig) return "Could not build chart configuration. Check your data mapping.";
+    return null;
+  };
+
+  const handleReset = () => {
+    setData(null);
+    setColumns([]);
+    setConfig(DEFAULT_CONFIG);
+    setValidationError(null);
+    chartRef.current = null;
+  };
+
+  const handleChartReady = (chart) => {
+    chartRef.current = chart;
+  };
+
+  return (
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Top bar */}
+      <header className="sticky top-0 z-20 bg-card/80 backdrop-blur-md border-b border-border">
+        <div className="max-w-[1600px] mx-auto px-4 md:px-6 h-14 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="p-1.5 rounded-lg bg-primary/10">
+              <BarChart3 className="w-4.5 h-4.5 text-primary w-[18px] h-[18px]" />
+            </div>
+            <div>
+              <span className="font-semibold text-sm text-foreground">Highcharts Generator</span>
+              <span className="hidden sm:inline text-xs text-muted-foreground ml-2">Build charts visually, export anywhere</span>
+            </div>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleReset}
+            className="gap-1.5 text-xs h-8 text-muted-foreground hover:text-foreground"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            Reset chart
+          </Button>
+        </div>
+      </header>
+
+      <div className="flex-1 max-w-[1600px] mx-auto w-full px-4 md:px-6 py-4 flex flex-col lg:flex-row gap-4">
+        {/* Left panel */}
+        <aside className="w-full lg:w-[320px] xl:w-[360px] flex-shrink-0 space-y-3">
+          {/* Upload section */}
+          <div className="bg-card rounded-2xl border border-border p-4 space-y-3 shadow-sm">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Data Source</h2>
+            <FileUploader onDataLoaded={handleDataLoaded} />
+            {data && <DataTable data={data} columns={columns} />}
+          </div>
+
+          {/* Config section */}
+          {data && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-card rounded-2xl border border-border p-4 shadow-sm"
+            >
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Chart Configuration</h2>
+              <ChartConfig config={config} onChange={setConfig} columns={columns} />
+            </motion.div>
+          )}
+        </aside>
+
+        {/* Right panel */}
+        <main className="flex-1 min-w-0 flex flex-col gap-4">
+          {/* Validation error */}
+          <AnimatePresence>
+            {validationError && (
+              <motion.div
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                className="flex items-start gap-2.5 px-4 py-3 rounded-xl bg-destructive/10 text-destructive text-sm border border-destructive/20"
+              >
+                <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                {validationError}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Tab bar */}
+          <div className="flex items-center gap-1 p-1 bg-card rounded-xl border border-border w-fit shadow-sm">
+            {PREVIEW_TABS.map(t => (
+              <button
+                key={t.id}
+                onClick={() => setActiveTab(t.id)}
+                className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-medium transition-all
+                  ${activeTab === t.id
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  }`}
+              >
+                <t.icon className="w-3.5 h-3.5" />
+                {t.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Preview area */}
+          <div className="flex-1 bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+            <AnimatePresence mode="wait">
+              {activeTab === "preview" && (
+                <motion.div
+                  key="preview"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="p-4 md:p-6"
+                >
+                  <ChartPreview hcConfig={hcConfig} onChartReady={handleChartReady} />
+                </motion.div>
+              )}
+              {activeTab === "export" && (
+                <motion.div
+                  key="export"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="p-4 md:p-6 h-full min-h-[500px] flex flex-col"
+                >
+                  <ExportPanel hcConfig={hcConfig} chartRef={chartRef} />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </main>
+      </div>
+    </div>
+  );
+}
