@@ -222,7 +222,7 @@ export function buildHighchartsConfig(config, data) {
           formatter: function() {
             let s = `<span style="font-size:11px">${this.x}</span><br/>`;
             this.points.forEach(pt => {
-              s += `<span style="color:${pt.color}">●</span> ${pt.series.name}: <b>${fmt(pt.y)}</b><br/>`;
+              s += `<span style="color:${pt.color}">●</span> ${pt.series.name}: <b>${fmtTooltip(pt.y)}</b><br/>`;
             });
             return s;
           }
