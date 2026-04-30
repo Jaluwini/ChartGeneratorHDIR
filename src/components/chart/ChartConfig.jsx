@@ -66,7 +66,6 @@ function SwitchField({ label, value, onChange }) {
 export default function ChartConfig({ config, onChange, columns }) {
   const numericCols = columns.filter(c => c.type === "number");
   const allColOptions = columns.map(c => ({ value: c.name, label: c.name }));
-  const numericOptions = numericCols.map(c => ({ value: c.name, label: c.name }));
 
   const set = (key, val) => onChange({ ...config, [key]: val });
 
@@ -129,22 +128,26 @@ export default function ChartConfig({ config, onChange, columns }) {
         <div className="space-y-1.5">
           <Label className="text-xs text-muted-foreground">Y-Values (select one or more)</Label>
           <div className="flex flex-wrap gap-1.5">
-            {numericCols.map(c => (
+            {columns.map(c => (
               <button
                 key={c.name}
                 onClick={() => toggleYAxis(c.name)}
                 className={`text-xs px-2 py-1 rounded-md transition-all border font-medium
                   ${(config.yAxes || []).includes(c.name)
                     ? "bg-primary text-primary-foreground border-primary"
-                    : "border-border bg-secondary text-secondary-foreground hover:bg-muted"
+                    : c.type === "number"
+                      ? "border-border bg-secondary text-secondary-foreground hover:bg-muted"
+                      : "border-dashed border-border bg-secondary/50 text-muted-foreground hover:bg-muted"
                   }`}
+                title={c.type === "string" ? "String column — may not work as Y-value" : c.name}
               >
                 {c.name}
+                {c.type === "number" && <span className="ml-1 opacity-50 text-[10px]">#</span>}
               </button>
             ))}
           </div>
-          {numericCols.length === 0 && (
-            <p className="text-xs text-muted-foreground">No numeric columns detected</p>
+          {columns.length === 0 && (
+            <p className="text-xs text-muted-foreground">No columns detected</p>
           )}
         </div>
         {config.chartType !== "pie" && config.chartType !== "scatter" && (
