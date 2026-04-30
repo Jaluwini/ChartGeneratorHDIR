@@ -34,14 +34,14 @@ export function detectColumns(data) {
   return keys.map(name => ({ name, type: detectColumnType(data, name) }));
 }
 
-function buildFormatter(config, noScale = false) {
+function buildFormatter(config, noScale = false, noAffixes = false) {
   const scale = noScale ? "none" : (config.numberScale || "none");
   const divisor = scale === "thousands" ? 1000 : scale === "millions" ? 1000000 : scale === "billions" ? 1000000000 : 1;
   const dec = config.decimals ?? 0;
   const dp = config.decimalPoint === "comma" ? "," : ".";
   const ts = config.thousandsSep === "comma" ? "," : config.thousandsSep === "dot" ? "." : config.thousandsSep === "none" ? "" : "\u00a0";
-  const prefix = config.prefix || "";
-  const suffix = config.suffix || "";
+  const prefix = noAffixes ? "" : (config.prefix || "");
+  const suffix = noAffixes ? "" : (config.suffix || "");
 
   return (val) => {
     if (val === null || val === undefined || isNaN(val)) return "";
@@ -62,7 +62,7 @@ export function buildHighchartsConfig(config, data) {
   } = config;
 
   const fmt = buildFormatter(config);
-  const fmtTooltip = buildFormatter(config, true); // full tall i tooltip, ingen skalering
+  const fmtTooltip = buildFormatter(config, true, true); // full tall i tooltip, ingen skalering eller prefix/suffix
 
   if (!data || data.length === 0) return null;
   if (!xAxis || !yAxes || yAxes.length === 0) return null;
