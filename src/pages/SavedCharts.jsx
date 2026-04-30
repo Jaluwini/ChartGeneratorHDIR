@@ -103,7 +103,7 @@ export default function SavedCharts() {
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8 text-muted-foreground hover:text-primary"
-                      onClick={() => navigate(`/?load=${chart.id}`)}
+                      onClick={() => { window.location.href = `/?load=${chart.id}`; }}
                       title="Åpne og rediger"
                     >
                       <Pencil className="w-4 h-4" />
