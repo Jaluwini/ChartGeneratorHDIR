@@ -63,7 +63,7 @@ function SwitchField({ label, value, onChange }) {
   );
 }
 
-export default function ChartConfig({ config, onChange, columns }) {
+export default function ChartConfig({ config, onChange, columns, hideLabels = false }) {
   const numericCols = columns.filter(c => c.type === "number");
   const allColOptions = columns.map(c => ({ value: c.name, label: c.name }));
 
@@ -176,12 +176,14 @@ export default function ChartConfig({ config, onChange, columns }) {
       </Section>
 
       {/* Labels */}
-      <Section title="Labels & Titles">
-        <TextField label="Chart title" value={config.title} onChange={v => set("title", v)} placeholder="My Chart" />
-        <TextField label="Subtitle" value={config.subtitle} onChange={v => set("subtitle", v)} placeholder="Optional subtitle" />
-        <TextField label="X-axis title" value={config.xAxisTitle} onChange={v => set("xAxisTitle", v)} placeholder="Categories" />
-        <TextField label="Y-axis title" value={config.yAxisTitle} onChange={v => set("yAxisTitle", v)} placeholder="Values" />
-      </Section>
+      {!hideLabels && (
+        <Section title="Labels & Titles">
+          <TextField label="Chart title" value={config.title} onChange={v => set("title", v)} placeholder="My Chart" />
+          <TextField label="Subtitle" value={config.subtitle} onChange={v => set("subtitle", v)} placeholder="Optional subtitle" />
+          <TextField label="X-axis title" value={config.xAxisTitle} onChange={v => set("xAxisTitle", v)} placeholder="Categories" />
+          <TextField label="Y-axis title" value={config.yAxisTitle} onChange={v => set("yAxisTitle", v)} placeholder="Values" />
+        </Section>
+      )}
 
       {/* Number Format */}
       <Section title="Number Format" defaultOpen={false}>

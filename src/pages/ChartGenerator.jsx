@@ -249,7 +249,7 @@ export default function ChartGenerator() {
               className="bg-card rounded-2xl border border-border p-4 shadow-sm"
             >
               <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Chart Configuration</h2>
-              <ChartConfig config={config} onChange={setConfig} columns={columns} />
+              <ChartConfig config={config} onChange={setConfig} columns={columns} hideLabels={dataSource === "api" && !!selectedIndicator} />
             </motion.div>
           )}
         </aside>
