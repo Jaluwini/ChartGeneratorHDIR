@@ -40,7 +40,7 @@ export default function ChartGenerator() {
   const [config, setConfig] = useState(DEFAULT_CONFIG);
   const [activeTab, setActiveTab] = useState("preview");
   const [validationError, setValidationError] = useState(null);
-  const [dataSource, setDataSource] = useState("file"); // "file" | "api"
+  const [dataSource, setDataSource] = useState("api"); // "file" | "api"
   const [apiSource, setApiSource] = useState(null); // "helsedirektoratet" etc.
   const chartRef = useRef(null);
 
