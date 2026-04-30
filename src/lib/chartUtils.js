@@ -34,8 +34,8 @@ export function detectColumns(data) {
   return keys.map(name => ({ name, type: detectColumnType(data, name) }));
 }
 
-function buildFormatter(config) {
-  const scale = config.numberScale || "none";
+function buildFormatter(config, noScale = false) {
+  const scale = noScale ? "none" : (config.numberScale || "none");
   const divisor = scale === "thousands" ? 1000 : scale === "millions" ? 1000000 : scale === "billions" ? 1000000000 : 1;
   const dec = config.decimals ?? 0;
   const dp = config.decimalPoint === "comma" ? "," : ".";
@@ -62,6 +62,7 @@ export function buildHighchartsConfig(config, data) {
   } = config;
 
   const fmt = buildFormatter(config);
+  const fmtTooltip = buildFormatter(config, true); // full tall i tooltip, ingen skalering
 
   if (!data || data.length === 0) return null;
   if (!xAxis || !yAxes || yAxes.length === 0) return null;
@@ -112,7 +113,7 @@ export function buildHighchartsConfig(config, data) {
       }],
       legend: { enabled: legend !== false },
       tooltip: {
-        formatter: tooltipFormat ? undefined : function() { return `<b>${this.point.name}</b>: <b>${fmt(this.y)}</b> (${this.percentage.toFixed(1)}%)`; },
+        formatter: tooltipFormat ? undefined : function() { return `<b>${this.point.name}</b>: <b>${fmtTooltip(this.y)}</b> (${this.percentage.toFixed(1)}%)`; },
         pointFormat: tooltipFormat || undefined,
       },
       credits: { enabled: false },
@@ -143,7 +144,7 @@ export function buildHighchartsConfig(config, data) {
       }],
       legend: { enabled: legend !== false },
       tooltip: {
-        formatter: tooltipFormat ? undefined : function() { return `<b>${this.point.name}</b>: (${fmt(this.x)}, ${fmt(this.y)})`; },
+        formatter: tooltipFormat ? undefined : function() { return `<b>${this.point.name}</b>: (${fmtTooltip(this.x)}, ${fmtTooltip(this.y)})`; },
         pointFormat: tooltipFormat || undefined,
       },
       credits: { enabled: false },
