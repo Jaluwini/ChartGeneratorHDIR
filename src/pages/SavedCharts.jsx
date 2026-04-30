@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
-import { Link } from "react-router-dom";
-import { BarChart3, Trash2, ArrowLeft, RefreshCw } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { BarChart3, Trash2, ArrowLeft, RefreshCw, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Highcharts from "highcharts";
 
@@ -31,6 +31,7 @@ export default function SavedCharts() {
   const [charts, setCharts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(null);
+  const navigate = useNavigate();
 
   const load = async () => {
     setLoading(true);
@@ -97,15 +98,27 @@ export default function SavedCharts() {
                     <p className="text-sm font-semibold text-foreground truncate">{chart.title || "Uten tittel"}</p>
                     <p className="text-[11px] text-muted-foreground capitalize">{chart.chart_type} · {new Date(chart.created_date).toLocaleDateString("nb-NO")}</p>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-muted-foreground hover:text-destructive flex-shrink-0"
-                    onClick={() => handleDelete(chart.id)}
-                    disabled={deleting === chart.id}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-primary"
+                      onClick={() => navigate(`/?load=${chart.id}`)}
+                      title="Åpne og rediger"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                      onClick={() => handleDelete(chart.id)}
+                      disabled={deleting === chart.id}
+                      title="Slett"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             ))}

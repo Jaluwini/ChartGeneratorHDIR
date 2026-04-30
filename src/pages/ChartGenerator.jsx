@@ -96,16 +96,62 @@ export default function ChartGenerator() {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [savedChartId, setSavedChartId] = useState(null);
 
+  // Load a saved chart by ID from URL param on mount
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const loadId = params.get("load");
+    if (!loadId) return;
+    base44.entities.SavedChart.filter({ id: loadId }).then(results => {
+      const saved = results[0];
+      if (!saved) return;
+      setSavedChartId(saved.id);
+      setApiSource(saved.api_source || null);
+      if (saved.chart_config) {
+        setConfig(saved.chart_config);
+      }
+      // Reconstruct data rows from hc_config series so preview and config panel work
+      if (saved.hc_config && saved.chart_config) {
+        const hc = saved.hc_config;
+        const categories = hc.xAxis?.categories || [];
+        const series = hc.series || [];
+        const rows = categories.map((cat, i) => {
+          const row = { [saved.chart_config.xAxis || "Kategori"]: cat };
+          series.forEach(s => {
+            row[s.name] = s.data?.[i] ?? null;
+          });
+          return row;
+        });
+        const cols = [
+          { name: saved.chart_config.xAxis || "Kategori", type: "string" },
+          ...series.map(s => ({ name: s.name, type: "number" })),
+        ];
+        setData(rows);
+        setColumns(cols);
+      }
+    });
+  }, []);
+
   const handleSave = async () => {
     if (!hcConfig) return;
     setSaving(true);
-    const created = await base44.entities.SavedChart.create({
-      title: config.title || "Uten tittel",
-      hc_config: hcConfig,
-      api_source: apiSource,
-      chart_type: config.chartType,
-    });
-    setSavedChartId(created.id);
+    if (savedChartId) {
+      await base44.entities.SavedChart.update(savedChartId, {
+        title: config.title || "Uten tittel",
+        hc_config: hcConfig,
+        chart_config: config,
+        api_source: apiSource,
+        chart_type: config.chartType,
+      });
+    } else {
+      const created = await base44.entities.SavedChart.create({
+        title: config.title || "Uten tittel",
+        hc_config: hcConfig,
+        chart_config: config,
+        api_source: apiSource,
+        chart_type: config.chartType,
+      });
+      setSavedChartId(created.id);
+    }
     setSaving(false);
     setSaveSuccess(true);
     setTimeout(() => setSaveSuccess(false), 2500);
