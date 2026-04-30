@@ -99,6 +99,7 @@ export function buildHighchartsConfig(config, data) {
     }));
 
     return {
+      _appConfig: config,
       chart: { type: "pie", height: height || 400, width: width || null },
       title: { text: title || "" },
       subtitle: { text: subtitle || "" },
@@ -131,6 +132,7 @@ export function buildHighchartsConfig(config, data) {
     }));
 
     return {
+      _appConfig: config,
       chart: { type: "scatter", height: height || 400, width: width || null },
       title: { text: title || "" },
       subtitle: { text: subtitle || "" },
@@ -188,6 +190,7 @@ export function buildHighchartsConfig(config, data) {
   }
 
   const hcConfig = {
+    _appConfig: config,
     chart: {
       type: actualType,
       height: height || 400,
@@ -238,6 +241,7 @@ export function buildHighchartsConfig(config, data) {
 
 export function configToHTML(hcConfig) {
   // Remove null width so Highcharts auto-sizes in the exported HTML
+  // Keep _appConfig so the chart can be fully reconstructed later
   const exportConfig = { ...hcConfig, chart: { ...hcConfig.chart, width: undefined } };
   const jsonStr = JSON.stringify(exportConfig, null, 2);
   return `<!DOCTYPE html>
