@@ -120,6 +120,7 @@ export default function SavedCharts() {
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-foreground truncate">{chart.title || "Uten tittel"}</p>
                     <p className="text-[11px] text-muted-foreground capitalize">{chart.chart_type} · {new Date(chart.created_date).toLocaleDateString("nb-NO")}</p>
+                    <p className="text-[10px] text-muted-foreground/70 font-mono mt-1 truncate">ID: {chart.id}</p>
                   </div>
                   <div className="flex items-center gap-1 flex-shrink-0">
                     <Button
