@@ -101,8 +101,7 @@ export default function ChartGenerator() {
     const params = new URLSearchParams(window.location.search);
     const loadId = params.get("load");
     if (!loadId) return;
-    base44.entities.SavedChart.filter({ id: loadId }).then(results => {
-      const saved = results[0];
+    base44.entities.SavedChart.get(loadId).then(saved => {
       if (!saved) return;
       setSavedChartId(saved.id);
       setApiSource(saved.api_source || null);
