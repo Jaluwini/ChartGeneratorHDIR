@@ -202,6 +202,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: "Graf ikke funnet" }, { status: 404 });
     }
     if (!chart) return Response.json({ error: "Graf ikke funnet" }, { status: 404 });
+    if (!chart.exposed_in_api) return Response.json({ error: "Denne grafen er ikke eksponert i API" }, { status: 403 });
 
     let hc_config = chart.hc_config;
 

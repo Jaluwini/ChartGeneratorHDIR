@@ -21,6 +21,11 @@
     "chart_type": {
       "type": "string",
       "description": "Chart type (column, line, bar, etc.)"
+    },
+    "exposed_in_api": {
+      "type": "boolean",
+      "description": "Whether this chart is publicly accessible via the getChart API",
+      "default": false
     }
   },
   "required": [

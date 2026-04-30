@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Link, useNavigate } from "react-router-dom";
-import { BarChart3, Trash2, ArrowLeft, RefreshCw, Pencil } from "lucide-react";
+import { BarChart3, Trash2, ArrowLeft, RefreshCw, Pencil, Globe, GlobeLock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Highcharts from "highcharts";
 
@@ -31,7 +31,16 @@ export default function SavedCharts() {
   const [charts, setCharts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(null);
+  const [toggling, setToggling] = useState(null);
   const navigate = useNavigate();
+
+  const handleToggleApi = async (chart) => {
+    setToggling(chart.id);
+    const newVal = !chart.exposed_in_api;
+    await base44.entities.SavedChart.update(chart.id, { exposed_in_api: newVal });
+    setCharts(prev => prev.map(c => c.id === chart.id ? { ...c, exposed_in_api: newVal } : c));
+    setToggling(null);
+  };
 
   const load = async () => {
     setLoading(true);
@@ -93,12 +102,30 @@ export default function SavedCharts() {
                 <div className="p-4 pb-2">
                   <MiniChart hcConfig={chart.hc_config} />
                 </div>
+                {/* API exposure badge */}
+                {chart.exposed_in_api && (
+                  <div className="mx-4 mb-2 flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-green-500/10 border border-green-500/20 w-fit">
+                    <Globe className="w-3 h-3 text-green-600" />
+                    <span className="text-[11px] text-green-700 font-medium">Eksponert i API</span>
+                  </div>
+                )}
+
                 <div className="px-4 pb-4 flex items-center justify-between gap-2">
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-foreground truncate">{chart.title || "Uten tittel"}</p>
                     <p className="text-[11px] text-muted-foreground capitalize">{chart.chart_type} · {new Date(chart.created_date).toLocaleDateString("nb-NO")}</p>
                   </div>
                   <div className="flex items-center gap-1 flex-shrink-0">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className={`h-8 w-8 transition-colors ${chart.exposed_in_api ? "text-green-600 hover:text-muted-foreground" : "text-muted-foreground hover:text-green-600"}`}
+                      onClick={() => handleToggleApi(chart)}
+                      disabled={toggling === chart.id}
+                      title={chart.exposed_in_api ? "Skjul fra API" : "Eksponer i API"}
+                    >
+                      {chart.exposed_in_api ? <Globe className="w-4 h-4" /> : <GlobeLock className="w-4 h-4" />}
+                    </Button>
                     <Button
                       variant="ghost"
                       size="icon"
