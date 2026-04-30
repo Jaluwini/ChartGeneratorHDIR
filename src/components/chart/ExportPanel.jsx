@@ -42,7 +42,7 @@ const TABS = [
   { id: "html", label: "HTML", icon: FileCode },
 ];
 
-export default function ExportPanel({ hcConfig, chartRef }) {
+export default function ExportPanel({ hcConfig, chartRef, apiSource }) {
   const [tab, setTab] = useState("json");
 
   if (!hcConfig) {
@@ -54,7 +54,7 @@ export default function ExportPanel({ hcConfig, chartRef }) {
   }
 
   const jsonStr = JSON.stringify(hcConfig, null, 2);
-  const htmlStr = configToHTML(hcConfig);
+  const htmlStr = configToHTML(hcConfig, apiSource);
 
   const exportPNGCanvas = () => {
     const container = document.querySelector(".highcharts-container svg");

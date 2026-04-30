@@ -6,6 +6,7 @@ import DataTable from "@/components/chart/DataTable";
 import ChartConfig from "@/components/chart/ChartConfig";
 import ChartPreview from "@/components/chart/ChartPreview";
 import ExportPanel from "@/components/chart/ExportPanel";
+import ApiDataImporter from "@/components/chart/ApiDataImporter";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, BarChart3, Eye, Code2, AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -40,11 +41,14 @@ export default function ChartGenerator() {
   const [config, setConfig] = useState(DEFAULT_CONFIG);
   const [activeTab, setActiveTab] = useState("preview");
   const [validationError, setValidationError] = useState(null);
+  const [dataSource, setDataSource] = useState("file"); // "file" | "api"
+  const [apiSource, setApiSource] = useState(null); // "helsedirektoratet" etc.
   const chartRef = useRef(null);
 
-  const handleDataLoaded = useCallback(({ data: newData, columns: newCols }) => {
+  const handleDataLoaded = useCallback(({ data: newData, columns: newCols, source }) => {
     setData(newData);
     setColumns(newCols);
+    if (source) setApiSource(source);
     // Auto-set first string col as X, numeric cols as Y
     const strCols = newCols.filter(c => c.type === "string");
     const numCols = newCols.filter(c => c.type === "number");
@@ -75,6 +79,7 @@ export default function ChartGenerator() {
     setColumns([]);
     setConfig(DEFAULT_CONFIG);
     setValidationError(null);
+    setApiSource(null);
     chartRef.current = null;
   };
 
@@ -113,8 +118,25 @@ export default function ChartGenerator() {
         <aside className="w-full lg:w-[320px] xl:w-[360px] flex-shrink-0 space-y-3">
           {/* Upload section */}
           <div className="bg-card rounded-2xl border border-border p-4 space-y-3 shadow-sm">
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Data Source</h2>
-            <FileUploader onDataLoaded={handleDataLoaded} />
+            <div className="flex items-center justify-between">
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Data Source</h2>
+              <div className="flex rounded-lg border border-border overflow-hidden text-[11px] font-medium">
+                <button
+                  onClick={() => setDataSource("file")}
+                  className={`px-2.5 py-1 transition-colors ${dataSource === "file" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}
+                >
+                  Fil
+                </button>
+                <button
+                  onClick={() => setDataSource("api")}
+                  className={`px-2.5 py-1 transition-colors ${dataSource === "api" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}
+                >
+                  API
+                </button>
+              </div>
+            </div>
+            {dataSource === "file" && <FileUploader onDataLoaded={handleDataLoaded} />}
+            {dataSource === "api" && <ApiDataImporter onDataLoaded={handleDataLoaded} />}
             {data && <DataTable data={data} columns={columns} />}
           </div>
 
@@ -188,7 +210,7 @@ export default function ChartGenerator() {
                   exit={{ opacity: 0 }}
                   className="p-4 md:p-6 h-full min-h-[500px] flex flex-col"
                 >
-                  <ExportPanel hcConfig={hcConfig} chartRef={chartRef} />
+                  <ExportPanel hcConfig={hcConfig} chartRef={chartRef} apiSource={apiSource} />
                 </motion.div>
               )}
             </AnimatePresence>

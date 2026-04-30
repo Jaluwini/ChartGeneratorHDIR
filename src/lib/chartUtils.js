@@ -239,11 +239,16 @@ export function buildHighchartsConfig(config, data) {
   return hcConfig;
 }
 
-export function configToHTML(hcConfig) {
+export function configToHTML(hcConfig, apiSource) {
   // Remove null width so Highcharts auto-sizes in the exported HTML
   // Keep _appConfig so the chart can be fully reconstructed later
   const exportConfig = { ...hcConfig, chart: { ...hcConfig.chart, width: undefined } };
   const jsonStr = JSON.stringify(exportConfig, null, 2);
+
+  const sourceFooter = apiSource === "helsedirektoratet"
+    ? `<p style="text-align:center;font-size:12px;color:#888;margin-top:12px;">Kilde: <a href="https://www.helsedirektoratet.no" target="_blank" style="color:#555;">Helsedirektoratet</a></p>`
+    : "";
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -259,6 +264,7 @@ export function configToHTML(hcConfig) {
 </head>
 <body>
   <div id="chart-container"></div>
+  ${sourceFooter}
   <script>
     Highcharts.chart('chart-container', ${jsonStr});
   <\/script>
