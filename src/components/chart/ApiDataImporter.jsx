@@ -65,7 +65,8 @@ function flattenObject(obj, prefix = "", depth = 0) {
 
 export default function ApiDataImporter({ onDataLoaded }) {
   const [url, setUrl] = useState("");
-  const [apiKey, setApiKey] = useState("");
+  const [apiKeyName, setApiKeyName] = useState("Ocp-Apim-Subscription-Key");
+  const [apiKeyValue, setApiKeyValue] = useState("");
   const [customHeaders, setCustomHeaders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -87,8 +88,7 @@ export default function ApiDataImporter({ onDataLoaded }) {
     setSuccess(false);
 
     const headers = {};
-    if (apiKey.trim()) headers["Authorization"] = `Bearer ${apiKey.trim()}`;
-    if (apiKey.trim() && !apiKey.startsWith("Bearer")) headers["x-api-key"] = apiKey.trim();
+    if (apiKeyName.trim() && apiKeyValue.trim()) headers[apiKeyName.trim()] = apiKeyValue.trim();
     customHeaders.forEach(h => { if (h.key.trim()) headers[h.key.trim()] = h.value; });
 
     try {
@@ -162,13 +162,28 @@ export default function ApiDataImporter({ onDataLoaded }) {
       {/* API key */}
       <div className="space-y-1">
         <Label className="text-xs text-muted-foreground">API-nøkkel (valgfritt)</Label>
-        <Input
-          type="password"
-          value={apiKey}
-          onChange={e => setApiKey(e.target.value)}
-          placeholder="Bearer token eller API-nøkkel"
-          className="h-8 text-xs"
-        />
+        <div className="flex gap-1.5">
+          <Input
+            value={apiKeyName}
+            onChange={e => setApiKeyName(e.target.value)}
+            placeholder="Header-navn"
+            className="h-8 text-xs w-[45%]"
+            list="api-key-suggestions"
+          />
+          <datalist id="api-key-suggestions">
+            <option value="Ocp-Apim-Subscription-Key" />
+            <option value="Authorization" />
+            <option value="x-api-key" />
+            <option value="X-Api-Key" />
+          </datalist>
+          <Input
+            type="password"
+            value={apiKeyValue}
+            onChange={e => setApiKeyValue(e.target.value)}
+            placeholder="Nøkkelverdi"
+            className="h-8 text-xs flex-1"
+          />
+        </div>
       </div>
 
       {/* Custom headers */}
