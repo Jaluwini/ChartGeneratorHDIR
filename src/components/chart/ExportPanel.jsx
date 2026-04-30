@@ -160,16 +160,10 @@ export default function ExportPanel({ hcConfig, chartRef, apiSource, savedChartI
           ) : (() => {
             const appId = window.location.hostname.split(".")[0];
             const fnUrl = `https://api.base44.app/api/apps/${appId}/functions/getChart`;
-            const curlExample = `curl -X POST "${fnUrl}" \\
-  -H "Content-Type: application/json" \\
-  -d '{"id": "${savedChartId}"}'`;
-            const jsExample = `const res = await fetch("${fnUrl}", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ id: "${savedChartId}" })
-});
-const { hc_config } = await res.json();
-Highcharts.chart("container", hc_config);`;
+            const curlExample = `curl -X GET "${fnUrl}?id=${savedChartId}"`;
+            const jsExample = `const res = await fetch("${fnUrl}?id=${savedChartId}");
+            const { hc_config } = await res.json();
+            Highcharts.chart("container", hc_config);`;
 
             return (
               <div className="space-y-3">

@@ -190,8 +190,8 @@ function buildHighchartsConfig(config, data) {
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const body = await req.json();
-    const { id } = body;
+    const url = new URL(req.url);
+    const id = url.searchParams.get("id");
 
     if (!id) return Response.json({ error: "Mangler id" }, { status: 400 });
 
