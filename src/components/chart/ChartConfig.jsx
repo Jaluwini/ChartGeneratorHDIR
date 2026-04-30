@@ -127,24 +127,39 @@ export default function ChartConfig({ config, onChange, columns }) {
         />
         <div className="space-y-1.5">
           <Label className="text-xs text-muted-foreground">Y-Values (select one or more)</Label>
-          <div className="flex flex-wrap gap-1.5">
-            {columns.map(c => (
-              <button
-                key={c.name}
-                onClick={() => toggleYAxis(c.name)}
-                className={`text-xs px-2 py-1 rounded-md transition-all border font-medium
-                  ${(config.yAxes || []).includes(c.name)
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : c.type === "number"
-                      ? "border-border bg-secondary text-secondary-foreground hover:bg-muted"
-                      : "border-dashed border-border bg-secondary/50 text-muted-foreground hover:bg-muted"
-                  }`}
-                title={c.type === "string" ? "String column — may not work as Y-value" : c.name}
-              >
-                {c.name}
-                {c.type === "number" && <span className="ml-1 opacity-50 text-[10px]">#</span>}
-              </button>
+          <div className="space-y-1.5">
+            {(config.yAxes || []).map((col, i) => (
+              <div key={i} className="flex gap-1.5">
+                <select
+                  value={col}
+                  onChange={e => {
+                    const updated = [...(config.yAxes || [])];
+                    updated[i] = e.target.value;
+                    set("yAxes", updated);
+                  }}
+                  className="flex-1 rounded-lg border border-input bg-background text-sm px-2.5 py-1.5 text-foreground outline-none focus:ring-2 focus:ring-ring/50 transition-all"
+                >
+                  {columns.map(c => (
+                    <option key={c.name} value={c.name}>{c.name}{c.type === "number" ? " #" : ""}</option>
+                  ))}
+                </select>
+                <button
+                  onClick={() => set("yAxes", (config.yAxes || []).filter((_, j) => j !== i))}
+                  className="px-2 rounded-lg border border-border hover:bg-destructive/10 hover:text-destructive transition-colors"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
             ))}
+            <button
+              onClick={() => {
+                const available = columns.find(c => !(config.yAxes || []).includes(c.name));
+                if (available) set("yAxes", [...(config.yAxes || []), available.name]);
+              }}
+              className="flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 transition-colors"
+            >
+              <Plus className="w-3.5 h-3.5" /> Add Y-value
+            </button>
           </div>
           {columns.length === 0 && (
             <p className="text-xs text-muted-foreground">No columns detected</p>
