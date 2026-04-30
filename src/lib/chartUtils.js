@@ -199,7 +199,8 @@ export function buildHighchartsConfig(config, data) {
     xAxis: {
       categories,
       title: { text: xAxisTitle || xAxis || "" },
-      crosshair: true
+      crosshair: true,
+      tickInterval: config.xTickInterval || undefined
     },
     yAxis: {
       title: { text: yAxisTitle || (yAxes[0] || "") },
