@@ -34,6 +34,25 @@ export function detectColumns(data) {
   return keys.map(name => ({ name, type: detectColumnType(data, name) }));
 }
 
+function buildFormatter(config) {
+  const scale = config.numberScale || "none";
+  const divisor = scale === "thousands" ? 1000 : scale === "millions" ? 1000000 : scale === "billions" ? 1000000000 : 1;
+  const dec = config.decimals ?? 0;
+  const dp = config.decimalPoint === "comma" ? "," : ".";
+  const ts = config.thousandsSep === "comma" ? "," : config.thousandsSep === "dot" ? "." : config.thousandsSep === "none" ? "" : "\u00a0";
+  const prefix = config.prefix || "";
+  const suffix = config.suffix || "";
+
+  return (val) => {
+    if (val === null || val === undefined || isNaN(val)) return "";
+    const scaled = val / divisor;
+    const [intPart, decPart] = scaled.toFixed(dec).split(".");
+    const intFormatted = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ts);
+    const number = dec > 0 ? intFormatted + dp + decPart : intFormatted;
+    return prefix + number + suffix;
+  };
+}
+
 export function buildHighchartsConfig(config, data) {
   const {
     chartType, xAxis, yAxes, groupBy,
@@ -41,6 +60,8 @@ export function buildHighchartsConfig(config, data) {
     colors, dataLabels, legend, sortData,
     decimals, height, width, tooltipFormat
   } = config;
+
+  const fmt = buildFormatter(config);
 
   if (!data || data.length === 0) return null;
   if (!xAxis || !yAxes || yAxes.length === 0) return null;
@@ -86,12 +107,13 @@ export function buildHighchartsConfig(config, data) {
         data: pieData,
         dataLabels: {
           enabled: dataLabels !== false,
-          format: `<b>{point.name}</b>: {point.percentage:.${decimals ?? 1}f}%`
+          formatter: function() { return `<b>${this.point.name}</b>: ${fmt(this.y)} (${this.percentage.toFixed(1)}%)`; }
         }
       }],
       legend: { enabled: legend !== false },
       tooltip: {
-        pointFormat: tooltipFormat || `<b>{point.name}</b>: <b>{point.y:.${decimals ?? 0}f}</b> ({point.percentage:.1f}%)`
+        formatter: tooltipFormat ? undefined : function() { return `<b>${this.point.name}</b>: <b>${fmt(this.y)}</b> (${this.percentage.toFixed(1)}%)`; },
+        pointFormat: tooltipFormat || undefined,
       },
       credits: { enabled: false },
       exporting: { enabled: false }
@@ -117,11 +139,12 @@ export function buildHighchartsConfig(config, data) {
       series: [{
         name: yCol,
         data: scatterData,
-        dataLabels: { enabled: dataLabels === true }
+        dataLabels: { enabled: dataLabels === true, formatter: function() { return fmt(this.y); } }
       }],
       legend: { enabled: legend !== false },
       tooltip: {
-        pointFormat: tooltipFormat || `<b>{point.name}</b>: ({point.x}, {point.y:.${decimals ?? 0}f})`
+        formatter: tooltipFormat ? undefined : function() { return `<b>${this.point.name}</b>: (${fmt(this.x)}, ${fmt(this.y)})`; },
+        pointFormat: tooltipFormat || undefined,
       },
       credits: { enabled: false },
       exporting: { enabled: false }
@@ -145,7 +168,7 @@ export function buildHighchartsConfig(config, data) {
         data: categories.map(cat => catMap[cat] ?? null),
         dataLabels: {
           enabled: dataLabels === true,
-          format: `{y:.${decimals ?? 0}f}`
+          formatter: function() { return fmt(this.y); }
         },
         color: themeColors[gi % themeColors.length]
       };
@@ -157,7 +180,7 @@ export function buildHighchartsConfig(config, data) {
       data: workingData.map(row => cleanNumeric(row[yCol]) || 0),
       dataLabels: {
         enabled: dataLabels === true,
-        format: `{y:.${decimals ?? 0}f}`
+        formatter: function() { return fmt(this.y); }
       },
       color: themeColors[yi % themeColors.length]
     }));
@@ -180,11 +203,12 @@ export function buildHighchartsConfig(config, data) {
     yAxis: {
       title: { text: yAxisTitle || (yAxes[0] || "") },
       gridLineWidth: 1,
-      stackLabels: isStacked ? { enabled: dataLabels === true } : undefined
+      stackLabels: isStacked ? { enabled: dataLabels === true, formatter: function() { return fmt(this.total); } } : undefined,
+      labels: { formatter: function() { return fmt(this.value); } }
     },
     plotOptions: {
       series: {
-        dataLabels: { enabled: dataLabels === true, format: `{y:.${decimals ?? 0}f}` }
+        dataLabels: { enabled: dataLabels === true, formatter: function() { return fmt(this.y); } }
       },
       ...(isStacked ? { column: { stacking: "normal" } } : {})
     },
@@ -193,8 +217,13 @@ export function buildHighchartsConfig(config, data) {
       ? { pointFormat: tooltipFormat }
       : {
           shared: true,
-          valueDecimals: decimals ?? 0,
-          headerFormat: `<span style="font-size:11px">{point.key}</span><br/>`
+          formatter: function() {
+            let s = `<span style="font-size:11px">${this.x}</span><br/>`;
+            this.points.forEach(pt => {
+              s += `<span style="color:${pt.color}">●</span> ${pt.series.name}: <b>${fmt(pt.y)}</b><br/>`;
+            });
+            return s;
+          }
         },
     series,
     credits: { enabled: false },

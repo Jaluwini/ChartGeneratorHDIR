@@ -183,6 +183,63 @@ export default function ChartConfig({ config, onChange, columns }) {
         <TextField label="Y-axis title" value={config.yAxisTitle} onChange={v => set("yAxisTitle", v)} placeholder="Values" />
       </Section>
 
+      {/* Number Format */}
+      <Section title="Number Format" defaultOpen={false}>
+        <SelectField
+          label="Scale (display values as)"
+          value={config.numberScale || "none"}
+          onChange={v => set("numberScale", v)}
+          options={[
+            { value: "none", label: "No scaling (full number)" },
+            { value: "thousands", label: "Thousands (÷ 1 000)" },
+            { value: "millions", label: "Millions (÷ 1 000 000)" },
+            { value: "billions", label: "Billions (÷ 1 000 000 000)" },
+          ]}
+        />
+        <SelectField
+          label="Thousands separator"
+          value={config.thousandsSep ?? "space"}
+          onChange={v => set("thousandsSep", v)}
+          options={[
+            { value: "none", label: "None (1000000)" },
+            { value: "space", label: "Space (1 000 000)" },
+            { value: "comma", label: "Comma (1,000,000)" },
+            { value: "dot", label: "Dot (1.000.000)" },
+          ]}
+        />
+        <SelectField
+          label="Decimal separator"
+          value={config.decimalPoint ?? "dot"}
+          onChange={v => set("decimalPoint", v)}
+          options={[
+            { value: "dot", label: "Dot (1.5)" },
+            { value: "comma", label: "Comma (1,5)" },
+          ]}
+        />
+        <div className="grid grid-cols-2 gap-2">
+          <TextField label="Prefix" value={config.prefix || ""} onChange={v => set("prefix", v)} placeholder="e.g. $, kr" />
+          <TextField label="Suffix" value={config.suffix || ""} onChange={v => set("suffix", v)} placeholder="e.g. %, NOK" />
+        </div>
+        {/* Live preview */}
+        <div className="px-3 py-2 rounded-lg bg-muted/50 text-xs text-muted-foreground">
+          Preview: <span className="font-mono font-semibold text-foreground">
+            {(() => {
+              const exampleRaw = 1234567.89;
+              const scale = config.numberScale || "none";
+              const divisor = scale === "thousands" ? 1000 : scale === "millions" ? 1000000 : scale === "billions" ? 1000000000 : 1;
+              const dec = config.decimals ?? 0;
+              const dp = config.decimalPoint === "comma" ? "," : ".";
+              const ts = config.thousandsSep === "comma" ? "," : config.thousandsSep === "dot" ? "." : config.thousandsSep === "none" ? "" : "\u00a0";
+              const scaled = exampleRaw / divisor;
+              const [intPart, decPart] = scaled.toFixed(dec).split(".");
+              const intFormatted = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ts);
+              const formatted = dec > 0 ? intFormatted + dp + decPart : intFormatted;
+              return `${config.prefix || ""}${formatted}${config.suffix || ""}`;
+            })()}
+          </span>
+        </div>
+      </Section>
+
       {/* Display */}
       <Section title="Display Options">
         <SwitchField label="Data labels" value={config.dataLabels} onChange={v => set("dataLabels", v)} />
