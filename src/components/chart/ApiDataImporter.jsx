@@ -59,7 +59,15 @@ export default function ApiDataImporter({ onDataLoaded, onIndicatorSelected }) {
       }
 
       const cols = detectColumns(rows);
-      onDataLoaded({ data: rows, columns: cols, source: "helsedirektoratet", title: indicator.tittel });
+      onDataLoaded({
+        data: rows,
+        columns: cols,
+        source: "helsedirektoratet",
+        title: indicator.tittel,
+        savedJsonUrl: indicator.jsonUrl,
+        savedMeasureType: selectedFilters.measureType,
+        savedEnhetType: selectedFilters.enhetType,
+      });
     } catch (e) {
       setDataError(e.message || "Kunne ikke laste data.");
     }
