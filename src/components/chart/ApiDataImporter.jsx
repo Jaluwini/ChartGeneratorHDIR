@@ -59,7 +59,7 @@ export default function ApiDataImporter({ onDataLoaded }) {
       }
 
       const cols = detectColumns(rows);
-      onDataLoaded({ data: rows, columns: cols, source: "helsedirektoratet" });
+      onDataLoaded({ data: rows, columns: cols, source: "helsedirektoratet", title: indicator.tittel });
     } catch (e) {
       setDataError(e.message || "Kunne ikke laste data.");
     }

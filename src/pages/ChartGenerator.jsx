@@ -44,7 +44,7 @@ export default function ChartGenerator() {
   const [apiSource, setApiSource] = useState(null); // "helsedirektoratet" etc.
   const chartRef = useRef(null);
 
-  const handleDataLoaded = useCallback(({ data: newData, columns: newCols, source }) => {
+  const handleDataLoaded = useCallback(({ data: newData, columns: newCols, source, title }) => {
     setData(newData);
     setColumns(newCols);
     if (source) setApiSource(source);
@@ -54,6 +54,7 @@ export default function ChartGenerator() {
       xAxis: suggested.xAxis,
       yAxes: suggested.yAxes,
       chartType: suggested.chartType || prev.chartType,
+      title: title || prev.title,
     }));
     setValidationError(null);
   }, []);
