@@ -35,7 +35,7 @@ export default function ApiSettings() {
     load();
   }, []);
 
-  const appId = window.location.hostname.split(".")[0];
+  const appId = "69f308f7754a9d73da3f8a17";
   const apiBase = `https://api.base44.app/api/apps/${appId}/functions/getChart`;
 
   return (
