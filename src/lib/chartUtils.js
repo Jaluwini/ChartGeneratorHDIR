@@ -13,10 +13,18 @@ export const CHART_TYPES = [
   { value: "column_stacked", label: "Stacked Column" },
 ];
 
+function cleanNumeric(v) {
+  if (v === null || v === undefined || v === "") return NaN;
+  // Remove thousand separators: spaces, dots, underscores, apostrophes — then parse
+  const cleaned = String(v).replace(/[\s\u00a0_']/g, "").replace(/,/g, ".");
+  const n = parseFloat(cleaned);
+  return isNaN(n) ? NaN : n;
+}
+
 export function detectColumnType(data, columnName) {
   if (!data || data.length === 0) return "string";
   const sample = data.slice(0, 20).map(row => row[columnName]).filter(v => v !== null && v !== undefined && v !== "");
-  const numericCount = sample.filter(v => !isNaN(parseFloat(v)) && isFinite(v)).length;
+  const numericCount = sample.filter(v => !isNaN(cleanNumeric(v))).length;
   return numericCount / sample.length >= 0.7 ? "number" : "string";
 }
 
@@ -46,8 +54,8 @@ export function buildHighchartsConfig(config, data) {
     workingData.sort((a, b) => {
       const va = a[xAxis];
       const vb = b[xAxis];
-      const aNum = parseFloat(va);
-      const bNum = parseFloat(vb);
+      const aNum = cleanNumeric(va);
+      const bNum = cleanNumeric(vb);
       if (!isNaN(aNum) && !isNaN(bNum)) {
         return sortData === "asc" ? aNum - bNum : bNum - aNum;
       }
@@ -64,7 +72,7 @@ export function buildHighchartsConfig(config, data) {
     const yCol = yAxes[0];
     const pieData = workingData.map((row, i) => ({
       name: String(row[xAxis] ?? ""),
-      y: parseFloat(row[yCol]) || 0,
+      y: cleanNumeric(row[yCol]) || 0,
       color: themeColors[i % themeColors.length]
     }));
 
@@ -94,8 +102,8 @@ export function buildHighchartsConfig(config, data) {
   if (chartType === "scatter") {
     const yCol = yAxes[0];
     const scatterData = workingData.map(row => ({
-      x: parseFloat(row[xAxis]) || 0,
-      y: parseFloat(row[yCol]) || 0,
+      x: cleanNumeric(row[xAxis]) || 0,
+      y: cleanNumeric(row[yCol]) || 0,
       name: String(row[xAxis] ?? "")
     }));
 
@@ -130,7 +138,7 @@ export function buildHighchartsConfig(config, data) {
     series = groups.map((group, gi) => {
       const groupRows = workingData.filter(row => String(row[groupBy]) === group);
       const catMap = {};
-      groupRows.forEach(row => { catMap[String(row[xAxis])] = parseFloat(row[yCol]) || 0; });
+      groupRows.forEach(row => { catMap[String(row[xAxis])] = cleanNumeric(row[yCol]) || 0; });
       return {
         name: group,
         type: actualType,
@@ -146,7 +154,7 @@ export function buildHighchartsConfig(config, data) {
     series = yAxes.map((yCol, yi) => ({
       name: yCol,
       type: actualType,
-      data: workingData.map(row => parseFloat(row[yCol]) || 0),
+      data: workingData.map(row => cleanNumeric(row[yCol]) || 0),
       dataLabels: {
         enabled: dataLabels === true,
         format: `{y:.${decimals ?? 0}f}`
