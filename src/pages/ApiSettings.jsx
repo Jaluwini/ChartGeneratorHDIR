@@ -111,59 +111,40 @@ export default function ApiSettings() {
               </div>
             </div>
 
-            {/* Individual chart endpoints */}
-            <div className="space-y-4">
-              <h3 className="font-semibold text-foreground text-sm">Hent spesifikk graf</h3>
-              {charts.map(chart => {
-                const chartUrl = `${apiBase}?id=${chart.id}`;
-                const curlCmd = `curl -X GET "${chartUrl}"`;
-                const jsExample = `const res = await fetch("${chartUrl}");
-      const data = await res.json();
-      Highcharts.chart("container", data.hc_config);`;
+            {/* Specific chart endpoint documentation */}
+            <div className="bg-card rounded-2xl border border-border p-6 shadow-sm space-y-4">
+              <div>
+                <h2 className="font-semibold text-foreground">Hent spesifikk graf</h2>
+                <p className="text-xs text-muted-foreground mt-1">Spør på endepunktet med graf-ID for å hente JSON-data</p>
+              </div>
 
-                return (
-                  <div key={chart.id} className="bg-card rounded-2xl border border-border p-6 shadow-sm space-y-4">
-                    <div>
-                      <h2 className="font-semibold text-foreground">{chart.title || "Uten tittel"}</h2>
-                      <p className="text-xs text-muted-foreground mt-1">ID: <code className="font-mono text-[11px] bg-muted/50 px-1.5 py-0.5 rounded">{chart.id}</code></p>
-                    </div>
+              <div className="space-y-2">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">GET Endpoint</p>
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/40 border border-border">
+                  <code className="text-xs font-mono text-foreground flex-1 break-all">{apiBase}?id=CHART_ID</code>
+                </div>
+              </div>
 
-                    <div className="space-y-2">
-                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">GET Endpoint</p>
-                      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/40 border border-border">
-                        <code className="text-xs font-mono text-foreground flex-1 break-all">{chartUrl}</code>
-                        <CopyButton text={chartUrl} label="Kopier" />
-                      </div>
-                    </div>
+              <div className="space-y-2">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">cURL</p>
+                <div className="rounded-lg border border-border overflow-auto bg-[hsl(222,47%,8%)]">
+                  <pre className="code-block text-[hsl(210,40%,85%)] p-3 text-[0.7rem]">{`curl -X GET "${apiBase}?id=CHART_ID"`}</pre>
+                </div>
+              </div>
 
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">cURL</p>
-                        <CopyButton text={curlCmd} label="Kopier" />
-                      </div>
-                      <div className="rounded-lg border border-border overflow-auto bg-[hsl(222,47%,8%)]">
-                        <pre className="code-block text-[hsl(210,40%,85%)] p-3 text-[0.7rem]">{curlCmd}</pre>
-                      </div>
-                    </div>
+              <div className="space-y-2">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">JavaScript</p>
+                <div className="rounded-lg border border-border overflow-auto bg-[hsl(222,47%,8%)]">
+                  <pre className="code-block text-[hsl(210,40%,85%)] p-3 text-[0.7rem]">{`const res = await fetch("${apiBase}?id=CHART_ID");
+const hc_config = await res.json();
+Highcharts.chart("container", hc_config);`}</pre>
+                </div>
+              </div>
 
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">JavaScript</p>
-                        <CopyButton text={jsExample} label="Kopier" />
-                      </div>
-                      <div className="rounded-lg border border-border overflow-auto bg-[hsl(222,47%,8%)]">
-                        <pre className="code-block text-[hsl(210,40%,85%)] p-3 text-[0.7rem]">{jsExample}</pre>
-                      </div>
-                    </div>
-
-                    <div className="text-xs text-muted-foreground space-y-1 px-3 py-2 rounded-lg bg-muted/30 border border-border">
-                      <p className="font-medium text-foreground mb-2">Response: Komplett graf-objekt</p>
-                      <p><code className="font-mono text-[11px]">hc_config</code> - Highcharts-konfigurasjon (klart til bruk)</p>
-                      <p><code className="font-mono text-[11px]">title, chart_type, api_source</code> - Metadata</p>
-                    </div>
-                  </div>
-                );
-              })}
+              <div className="text-xs text-muted-foreground space-y-1 px-3 py-2 rounded-lg bg-muted/30 border border-border">
+                <p className="font-medium text-foreground mb-2">Response: Highcharts-konfigurasjon</p>
+                <p>Responsen er en komplett Highcharts-konfigurasjon som er klar til bruk. Bytt <code className="font-mono text-[11px] bg-foreground/10 px-1 rounded">CHART_ID</code> med ID-en på grafen du vil hente.</p>
+              </div>
             </div>
           </>
         )}
