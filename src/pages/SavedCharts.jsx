@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Link, useNavigate } from "react-router-dom";
-import { BarChart3, Trash2, ArrowLeft, RefreshCw, Pencil, Globe, GlobeLock } from "lucide-react";
+import { BarChart3, Trash2, ArrowLeft, RefreshCw, Pencil, Globe, GlobeLock, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Highcharts from "highcharts";
 
@@ -69,6 +69,12 @@ export default function SavedCharts() {
             <span className="font-semibold text-sm text-foreground">Lagrede grafer</span>
           </div>
           <div className="flex items-center gap-2">
+            <Link to="/api-settings">
+              <Button variant="ghost" size="sm" className="gap-1.5 text-xs h-8 text-muted-foreground hover:text-foreground">
+                <Settings className="w-3.5 h-3.5" />
+                API
+              </Button>
+            </Link>
             <Button variant="ghost" size="sm" onClick={load} className="gap-1.5 text-xs h-8 text-muted-foreground hover:text-foreground">
               <RefreshCw className="w-3.5 h-3.5" />
               Oppdater

@@ -7,6 +7,7 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import ChartGenerator from './pages/ChartGenerator';
 import SavedCharts from './pages/SavedCharts';
+import ApiSettings from './pages/ApiSettings';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -32,6 +33,7 @@ const AuthenticatedApp = () => {
     <Routes>
       <Route path="/" element={<ChartGenerator />} />
       <Route path="/saved" element={<SavedCharts />} />
+      <Route path="/api-settings" element={<ApiSettings />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
