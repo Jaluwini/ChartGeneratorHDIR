@@ -4,7 +4,7 @@ import { detectColumns } from "@/lib/chartUtils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ChevronDown, ChevronUp, Globe, Loader2, AlertCircle, CheckCircle2, Plus, X, ArrowRight, RotateCcw } from "lucide-react";
+import { ChevronDown, ChevronUp, Globe, Loader2, AlertCircle, ArrowRight, RotateCcw } from "lucide-react";
 
 // Tries to find all array-of-objects paths in a JSON structure
 function findArrayPaths(obj, path = "", depth = 0) {
@@ -41,38 +41,18 @@ function flattenObject(obj, prefix = "", depth = 0) {
   return result;
 }
 
-const HINT_HEADERS = [
-  { label: "Ocp-Apim-Subscription-Key", value: "Ocp-Apim-Subscription-Key" },
-  { label: "Authorization (Bearer token)", value: "Authorization" },
-  { label: "x-api-key", value: "x-api-key" },
-  { label: "X-API-Key", value: "X-API-Key" },
-];
-
-// Step 1: URL + auth form
+// Step 1: URL form
 function StepFetch({ onFetched }) {
   const [url, setUrl] = useState("");
-  const [apiKeyName, setApiKeyName] = useState("");
-  const [apiKeyValue, setApiKeyValue] = useState("");
-  const [extraHeaders, setExtraHeaders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [showExtra, setShowExtra] = useState(false);
-
-  const addHeader = () => setExtraHeaders(h => [...h, { key: "", value: "" }]);
-  const removeHeader = (i) => setExtraHeaders(h => h.filter((_, j) => j !== i));
-  const updateHeader = (i, field, val) => setExtraHeaders(h => h.map((r, j) => j === i ? { ...r, [field]: val } : r));
 
   const handleFetch = async () => {
     if (!url.trim()) { setError("Lim inn en URL først."); return; }
     setLoading(true);
     setError(null);
-
-    const headers = {};
-    if (apiKeyName.trim() && apiKeyValue.trim()) headers[apiKeyName.trim()] = apiKeyValue.trim();
-    extraHeaders.forEach(h => { if (h.key.trim()) headers[h.key.trim()] = h.value; });
-
     try {
-      const response = await base44.functions.invoke("fetchApiData", { url: url.trim(), headers });
+      const response = await base44.functions.invoke("fetchApiData", { url: url.trim(), headers: {} });
       const result = response.data;
       if (result.error) { setError(result.error); setLoading(false); return; }
       onFetched(result.data);
@@ -94,55 +74,6 @@ function StepFetch({ onFetched }) {
           onKeyDown={e => e.key === "Enter" && handleFetch()}
         />
       </div>
-
-      <div className="space-y-1">
-        <Label className="text-xs text-muted-foreground">API-nøkkel (valgfritt)</Label>
-        <div className="flex gap-1.5">
-          <div className="relative w-[46%]">
-            <Input
-              value={apiKeyName}
-              onChange={e => setApiKeyName(e.target.value)}
-              placeholder="Header-navn"
-              className="h-8 text-xs"
-              list="key-name-hints"
-            />
-            <datalist id="key-name-hints">
-              {HINT_HEADERS.map(h => <option key={h.value} value={h.value} label={h.label} />)}
-            </datalist>
-          </div>
-          <Input
-            type="password"
-            value={apiKeyValue}
-            onChange={e => setApiKeyValue(e.target.value)}
-            placeholder="Nøkkelverdi"
-            className="h-8 text-xs flex-1"
-          />
-        </div>
-      </div>
-
-      <button
-        onClick={() => setShowExtra(v => !v)}
-        className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
-      >
-        {showExtra ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-        Flere headers
-      </button>
-      {showExtra && (
-        <div className="space-y-1.5">
-          {extraHeaders.map((h, i) => (
-            <div key={i} className="flex gap-1.5">
-              <Input value={h.key} onChange={e => updateHeader(i, "key", e.target.value)} placeholder="Navn" className="h-7 text-xs" />
-              <Input value={h.value} onChange={e => updateHeader(i, "value", e.target.value)} placeholder="Verdi" className="h-7 text-xs" />
-              <button onClick={() => removeHeader(i)} className="px-1 text-muted-foreground hover:text-destructive">
-                <X className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          ))}
-          <button onClick={addHeader} className="flex items-center gap-1 text-xs text-primary">
-            <Plus className="w-3.5 h-3.5" /> Legg til header
-          </button>
-        </div>
-      )}
 
       <Button onClick={handleFetch} disabled={loading} className="w-full h-8 text-xs gap-1.5">
         {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Globe className="w-3.5 h-3.5" />}

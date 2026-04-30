@@ -14,8 +14,11 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Missing url parameter' }, { status: 400 });
     }
 
+    const apiKey = Deno.env.get("HELSEDIR_API_KEY");
+
     const fetchHeaders = {
       'Accept': 'application/json',
+      ...(apiKey ? { 'Ocp-Apim-Subscription-Key': apiKey } : {}),
       ...(extraHeaders || {})
     };
 
