@@ -1,60 +1,30 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { detectColumns, suggestChartConfig } from "@/lib/chartUtils";
-import { Loader2, AlertCircle, Search, Filter } from "lucide-react";
-
-const INDEX_URL = "https://api.helsedirektoratet.no/innhold/nki/kvalitetsindikatorer/";
-
-// Value that signals "no data" in the API
-const NO_DATA_SENTINEL = -1e7;
-
-function parseYear(isoStr) {
-  if (!isoStr) return null;
-  return isoStr.slice(0, 4);
-}
-
-function processRows(rows) {
-  // Filter out sentinel values, then map to clean flat objects
-  return rows
-    .filter(row => {
-      const v = parseFloat(row.Value);
-      return !isNaN(v) && Math.abs(v - NO_DATA_SENTINEL) > 1;
-    })
-    .map(row => ({
-      År: parseYear(row.TimeFrom),
-      Enhet: row.LocationName || "",
-      Overordnet: row.ParentName || "",
-      Verdi: parseFloat(parseFloat(row.Value).toFixed(4)),
-      Måletype: row.MeasureType || "",
-      Periodetype: row.PeriodType || "",
-    }));
-}
+import { detectColumns } from "@/lib/chartUtils";
+import { Loader2, AlertCircle, Search, ChevronDown } from "lucide-react";
 
 export default function ApiDataImporter({ onDataLoaded }) {
   const [indicators, setIndicators] = useState([]);
   const [loadingList, setLoadingList] = useState(true);
   const [listError, setListError] = useState(null);
   const [search, setSearch] = useState("");
+
   const [selected, setSelected] = useState(null);
+  const [filterOptions, setFilterOptions] = useState(null); // { measureTypes, enhetTypes }
+  const [selectedMeasureType, setSelectedMeasureType] = useState(null);
+  const [selectedEnhetType, setSelectedEnhetType] = useState(null);
+
   const [loadingData, setLoadingData] = useState(false);
   const [dataError, setDataError] = useState(null);
 
+  // Load indicator list on mount
   useEffect(() => {
     const load = async () => {
       setLoadingList(true);
       setListError(null);
       try {
-        const response = await base44.functions.invoke("fetchApiData", { url: INDEX_URL, headers: {} });
-        const arr = Array.isArray(response.data?.data) ? response.data.data : [];
-        const items = arr
-          .filter(item => item.tittel && item.attachments?.some(a => a.fileType === "application/json"))
-          .map(item => ({
-            id: item.id,
-            tittel: item.tittel,
-            jsonUrl: item.attachments.find(a => a.fileType === "application/json").fileUri,
-          }))
-          .sort((a, b) => a.tittel.localeCompare(b.tittel, "no"));
-        setIndicators(items);
+        const res = await base44.functions.invoke("helsedirData", { action: "list" });
+        setIndicators(res.data?.indicators || []);
       } catch (e) {
         setListError(e.message || "Kunne ikke laste indikatorer.");
       }
@@ -63,27 +33,29 @@ export default function ApiDataImporter({ onDataLoaded }) {
     load();
   }, []);
 
-  const handleSelect = async (indicator) => {
-    setSelected(indicator);
+  // Fetch data whenever selected indicator or filters change
+  const fetchData = async (indicator, measureType, enhetType) => {
     setLoadingData(true);
     setDataError(null);
     try {
-      const response = await base44.functions.invoke("fetchApiData", { url: indicator.jsonUrl, headers: {} });
-      const rawData = response.data?.data;
+      const payload = { action: "fetchData", jsonUrl: indicator.jsonUrl };
+      if (measureType) payload.measureType = measureType;
+      if (enhetType) payload.enhetType = enhetType;
 
-      // Data is in AttachmentDataRows
-      const rawRows = rawData?.AttachmentDataRows;
-      if (!Array.isArray(rawRows) || rawRows.length === 0) {
-        setDataError("Ingen data funnet for denne indikatoren.");
+      const res = await base44.functions.invoke("helsedirData", payload);
+      const { rows, filterOptions: opts, selectedFilters } = res.data;
+
+      if (!rows || rows.length === 0) {
+        setDataError("Ingen data funnet med valgte filtre.");
         setLoadingData(false);
         return;
       }
 
-      const rows = processRows(rawRows);
-      if (rows.length === 0) {
-        setDataError("Alle datapunkter mangler verdi for denne indikatoren.");
-        setLoadingData(false);
-        return;
+      // Set filter options the first time
+      if (opts) {
+        setFilterOptions(opts);
+        if (!measureType) setSelectedMeasureType(selectedFilters.measureType);
+        if (!enhetType) setSelectedEnhetType(selectedFilters.enhetType);
       }
 
       const cols = detectColumns(rows);
@@ -92,6 +64,19 @@ export default function ApiDataImporter({ onDataLoaded }) {
       setDataError(e.message || "Kunne ikke laste data.");
     }
     setLoadingData(false);
+  };
+
+  const handleSelect = (indicator) => {
+    setSelected(indicator);
+    setFilterOptions(null);
+    setSelectedMeasureType(null);
+    setSelectedEnhetType(null);
+    fetchData(indicator, null, null);
+  };
+
+  const handleFilterChange = (measureType, enhetType) => {
+    if (!selected) return;
+    fetchData(selected, measureType, enhetType);
   };
 
   const filtered = indicators.filter(ind =>
@@ -134,8 +119,8 @@ export default function ApiDataImporter({ onDataLoaded }) {
         />
       </div>
 
-      {/* List */}
-      <div className="space-y-1 max-h-64 overflow-y-auto pr-1">
+      {/* Indicator list */}
+      <div className="space-y-1 max-h-52 overflow-y-auto pr-1">
         {filtered.length === 0 && (
           <p className="text-xs text-muted-foreground text-center py-4">Ingen treff</p>
         )}
@@ -155,13 +140,72 @@ export default function ApiDataImporter({ onDataLoaded }) {
         ))}
       </div>
 
-      {/* Loading / error state for selected indicator */}
+      {/* Filter options — shown after indicator is selected */}
+      {filterOptions && !loadingData && (
+        <div className="space-y-2 pt-1 border-t border-border">
+          <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Filtrer data</p>
+
+          {/* Enhet type */}
+          {filterOptions.enhetTypes.length > 1 && (
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">Nivå</label>
+              <div className="flex flex-wrap gap-1.5">
+                {filterOptions.enhetTypes.map(et => (
+                  <button
+                    key={et}
+                    onClick={() => {
+                      setSelectedEnhetType(et);
+                      handleFilterChange(selectedMeasureType, et);
+                    }}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-all ${
+                      selectedEnhetType === et
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "border-border hover:bg-muted"
+                    }`}
+                  >
+                    {et}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Measure type */}
+          {filterOptions.measureTypes.length > 1 && (
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">Måletype</label>
+              <div className="flex flex-wrap gap-1.5">
+                {filterOptions.measureTypes.map(mt => (
+                  <button
+                    key={mt}
+                    onClick={() => {
+                      setSelectedMeasureType(mt);
+                      handleFilterChange(mt, selectedEnhetType);
+                    }}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-all ${
+                      selectedMeasureType === mt
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "border-border hover:bg-muted"
+                    }`}
+                  >
+                    {mt}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Loading state */}
       {loadingData && (
         <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-muted/50 text-xs text-muted-foreground">
           <Loader2 className="w-3.5 h-3.5 animate-spin flex-shrink-0" />
-          Henter data for «{selected?.tittel}»…
+          {selected ? `Henter data for «${selected.tittel}»…` : "Henter data…"}
         </div>
       )}
+
+      {/* Error state */}
       {dataError && (
         <div className="flex items-start gap-2 px-3 py-2.5 rounded-lg bg-destructive/10 border border-destructive/20 text-xs text-destructive">
           <AlertCircle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
