@@ -232,15 +232,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    return Response.json({
-      id: chart.id,
-      title: chart.title,
-      chart_type: chart.chart_type,
-      api_source: chart.api_source,
-      created_date: chart.created_date,
-      updated_date: chart.updated_date,
-      hc_config,
-    });
+    return Response.json(hc_config);
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
