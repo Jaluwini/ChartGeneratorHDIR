@@ -1,6 +1,5 @@
 import { useState, useRef, useCallback } from "react";
-import { buildHighchartsConfig } from "@/lib/chartUtils";
-import { DEFAULT_COLORS } from "@/lib/chartUtils";
+import { buildHighchartsConfig, DEFAULT_COLORS, suggestChartConfig } from "@/lib/chartUtils";
 import FileUploader from "@/components/chart/FileUploader";
 import DataTable from "@/components/chart/DataTable";
 import ChartConfig from "@/components/chart/ChartConfig";
@@ -49,13 +48,12 @@ export default function ChartGenerator() {
     setData(newData);
     setColumns(newCols);
     if (source) setApiSource(source);
-    // Auto-set first string col as X, numeric cols as Y
-    const strCols = newCols.filter(c => c.type === "string");
-    const numCols = newCols.filter(c => c.type === "number");
+    const suggested = suggestChartConfig(newCols);
     setConfig(prev => ({
       ...prev,
-      xAxis: strCols[0]?.name || newCols[0]?.name || null,
-      yAxes: numCols.slice(0, 2).map(c => c.name),
+      xAxis: suggested.xAxis,
+      yAxes: suggested.yAxes,
+      chartType: suggested.chartType || prev.chartType,
     }));
     setValidationError(null);
   }, []);

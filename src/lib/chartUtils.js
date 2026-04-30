@@ -21,17 +21,74 @@ function cleanNumeric(v) {
   return isNaN(n) ? NaN : n;
 }
 
+// Date patterns: ISO dates, Norwegian dates (dd.mm.yyyy), year-only, year-month
+const DATE_PATTERNS = [
+  /^\d{4}-\d{2}-\d{2}(T.*)?$/,          // ISO 8601
+  /^\d{2}[.\-\/]\d{2}[.\-\/]\d{4}$/,    // dd.mm.yyyy
+  /^\d{4}$/,                              // year only
+  /^\d{4}[-\/]\d{2}$/,                   // year-month
+  /^Q[1-4]\s?\d{4}$/i,                   // Q1 2024
+];
+
+function looksLikeDate(v) {
+  const s = String(v).trim();
+  return DATE_PATTERNS.some(re => re.test(s));
+}
+
 export function detectColumnType(data, columnName) {
   if (!data || data.length === 0) return "string";
-  const sample = data.slice(0, 20).map(row => row[columnName]).filter(v => v !== null && v !== undefined && v !== "");
+  const sample = data.slice(0, 30)
+    .map(row => row[columnName])
+    .filter(v => v !== null && v !== undefined && v !== "");
+  if (sample.length === 0) return "string";
+
   const numericCount = sample.filter(v => !isNaN(cleanNumeric(v))).length;
-  return numericCount / sample.length >= 0.7 ? "number" : "string";
+  if (numericCount / sample.length >= 0.7) return "number";
+
+  const dateCount = sample.filter(v => looksLikeDate(v)).length;
+  if (dateCount / sample.length >= 0.7) return "date";
+
+  // Heuristic: if cardinality is low relative to total rows → likely a category
+  const unique = new Set(sample.map(v => String(v))).size;
+  if (unique <= Math.max(3, sample.length * 0.4)) return "category";
+
+  return "string";
 }
 
 export function detectColumns(data) {
   if (!data || data.length === 0) return [];
   const keys = Object.keys(data[0]);
   return keys.map(name => ({ name, type: detectColumnType(data, name) }));
+}
+
+/**
+ * Analyses detected columns and returns smart defaults for xAxis, yAxes and chartType.
+ * Priority: date > category > string for X-axis; number columns for Y-axes.
+ */
+export function suggestChartConfig(columns) {
+  if (!columns || columns.length === 0) return {};
+
+  // X-axis preference: date first, then category, then any string
+  const dateCols = columns.filter(c => c.type === "date");
+  const categoryCols = columns.filter(c => c.type === "category");
+  const stringCols = columns.filter(c => c.type === "string");
+  const numericCols = columns.filter(c => c.type === "number");
+
+  const xCol = dateCols[0] || categoryCols[0] || stringCols[0] || columns[0];
+  const yCols = numericCols.slice(0, 2).map(c => c.name);
+
+  // Chart type suggestion
+  let chartType = "column";
+  if (dateCols.length > 0) chartType = "line";                    // time series → line
+  if (yCols.length > 1) chartType = "line";                       // multiple series → line
+  if (categoryCols.length > 0 && yCols.length === 1) chartType = "bar"; // few categories → bar
+  if (numericCols.length === 0) chartType = "column";             // fallback
+
+  return {
+    xAxis: xCol?.name || null,
+    yAxes: yCols,
+    chartType,
+  };
 }
 
 function buildFormatter(config, noScale = false, noAffixes = false) {
