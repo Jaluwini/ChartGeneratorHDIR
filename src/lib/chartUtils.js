@@ -205,7 +205,9 @@ export function buildHighchartsConfig(config, data) {
 }
 
 export function configToHTML(hcConfig) {
-  const jsonStr = JSON.stringify(hcConfig, null, 2);
+  // Remove null width so Highcharts auto-sizes in the exported HTML
+  const exportConfig = { ...hcConfig, chart: { ...hcConfig.chart, width: undefined } };
+  const jsonStr = JSON.stringify(exportConfig, null, 2);
   return `<!DOCTYPE html>
 <html lang="en">
 <head>

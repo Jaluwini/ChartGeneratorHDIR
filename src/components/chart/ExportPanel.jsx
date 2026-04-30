@@ -56,33 +56,34 @@ export default function ExportPanel({ hcConfig, chartRef }) {
   const jsonStr = JSON.stringify(hcConfig, null, 2);
   const htmlStr = configToHTML(hcConfig);
 
-  const exportPNG = () => {
-    if (!chartRef?.current) return;
-    chartRef.current.exportChartLocal({ type: "image/png", filename: "chart" });
-  };
-
   const exportPNGCanvas = () => {
-    // Fallback: use SVG -> canvas
-    const container = document.querySelector(".highcharts-container");
+    const container = document.querySelector(".highcharts-container svg");
     if (!container) return;
-    const svg = container.querySelector("svg");
-    if (!svg) return;
 
-    const svgData = new XMLSerializer().serializeToString(svg);
+    const svgData = new XMLSerializer().serializeToString(container);
+    const svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
+    const url = URL.createObjectURL(svgBlob);
+
+    const bbox = container.getBoundingClientRect();
     const canvas = document.createElement("canvas");
-    const bbox = svg.getBoundingClientRect();
-    canvas.width = bbox.width || 800;
-    canvas.height = bbox.height || 400;
+    const scale = 2; // retina quality
+    canvas.width = (bbox.width || 800) * scale;
+    canvas.height = (bbox.height || 400) * scale;
     const ctx = canvas.getContext("2d");
+    ctx.scale(scale, scale);
+
     const img = new window.Image();
     img.onload = () => {
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(img, 0, 0);
+      URL.revokeObjectURL(url);
       const link = document.createElement("a");
       link.download = "chart.png";
       link.href = canvas.toDataURL("image/png");
       link.click();
     };
-    img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgData)));
+    img.src = url;
   };
 
   return (
