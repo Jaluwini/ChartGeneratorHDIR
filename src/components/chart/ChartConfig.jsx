@@ -262,6 +262,13 @@ export default function ChartConfig({ config, onChange, columns }) {
           type="number"
         />
         <TextField
+          label="Y-akse intervall (tickInterval)"
+          value={config.yTickInterval || ""}
+          onChange={v => set("yTickInterval", v === "" ? null : parseFloat(v) || null)}
+          placeholder="Auto"
+          type="number"
+        />
+        <TextField
           label="Tooltip format"
           value={config.tooltipFormat || ""}
           onChange={v => set("tooltipFormat", v)}

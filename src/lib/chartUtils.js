@@ -203,6 +203,7 @@ export function buildHighchartsConfig(config, data) {
     yAxis: {
       title: { text: yAxisTitle || (yAxes[0] || "") },
       gridLineWidth: 1,
+      tickInterval: config.yTickInterval || undefined,
       stackLabels: isStacked ? { enabled: dataLabels === true, formatter: function() { return fmt(this.total); } } : undefined,
       labels: { formatter: function() { return fmt(this.value); } }
     },
