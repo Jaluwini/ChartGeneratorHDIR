@@ -57,7 +57,7 @@ export default function ApiSettings() {
         </div>
       </header>
 
-      <div className="flex-1 max-w-[1200px] mx-auto w-full px-4 md:px-6 py-6">
+      <div className="flex-1 max-w-[1200px] mx-auto w-full px-4 md:px-6 py-6 space-y-6">
         {loading ? (
           <div className="flex items-center justify-center gap-2 py-8 text-xs text-muted-foreground">
             <div className="w-4 h-4 border-2 border-muted-foreground border-t-primary rounded-full animate-spin" />
@@ -70,81 +70,102 @@ export default function ApiSettings() {
             <p className="text-xs text-muted-foreground mt-1">Gå til «Mine grafer» og aktiver API-eksponering.</p>
           </div>
         ) : (
-          <div className="space-y-4">
-            {charts.map(chart => {
-              const curlCmd = `curl -X POST "${apiBase}" \\
-  -H "Content-Type: application/json" \\
-  -d '{"id": "${chart.id}"}'`;
+          <>
+            {/* List endpoint */}
+            <div className="bg-card rounded-2xl border border-border p-6 shadow-sm space-y-4">
+              <div>
+                <h2 className="font-semibold text-foreground">Alle eksponerte grafer</h2>
+                <p className="text-xs text-muted-foreground mt-1">Hent liste over alle tilgjengelige grafer</p>
+              </div>
 
-              const jsExample = `const res = await fetch("${apiBase}", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ id: "${chart.id}" })
-});
-const data = await res.json();
-console.log(data.hc_config);`;
-
-              return (
-                <div key={chart.id} className="bg-card rounded-2xl border border-border p-6 shadow-sm space-y-4">
-                  <div>
-                    <h2 className="font-semibold text-foreground">{chart.title || "Uten tittel"}</h2>
-                    <p className="text-xs text-muted-foreground mt-1">ID: <code className="font-mono text-[11px] bg-muted/50 px-1.5 py-0.5 rounded">{chart.id}</code></p>
-                  </div>
-
-                  {/* API Endpoint */}
-                  <div className="space-y-2">
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">API Endpoint</p>
-                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/40 border border-border">
-                      <code className="text-xs font-mono text-foreground flex-1 break-all">{apiBase}</code>
-                      <CopyButton text={apiBase} label="Kopier" />
-                    </div>
-                  </div>
-
-                  {/* POST Body */}
-                  <div className="space-y-2">
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">POST Body</p>
-                    <div className="rounded-lg border border-border overflow-hidden bg-[hsl(222,47%,8%)]">
-                      <pre className="code-block text-[hsl(210,40%,85%)] p-3 text-[0.7rem]">{`{"id": "${chart.id}"}`}</pre>
-                    </div>
-                  </div>
-
-                  {/* cURL */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">cURL</p>
-                      <CopyButton text={curlCmd} label="Kopier" />
-                    </div>
-                    <div className="rounded-lg border border-border overflow-auto bg-[hsl(222,47%,8%)]">
-                      <pre className="code-block text-[hsl(210,40%,85%)] p-3 text-[0.7rem]">{curlCmd}</pre>
-                    </div>
-                  </div>
-
-                  {/* JavaScript */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">JavaScript / Fetch</p>
-                      <CopyButton text={jsExample} label="Kopier" />
-                    </div>
-                    <div className="rounded-lg border border-border overflow-auto bg-[hsl(222,47%,8%)]">
-                      <pre className="code-block text-[hsl(210,40%,85%)] p-3 text-[0.7rem]">{jsExample}</pre>
-                    </div>
-                  </div>
-
-                  {/* Response format */}
-                  <div className="space-y-2">
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Response Format</p>
-                    <div className="text-xs text-muted-foreground space-y-1 px-3 py-2 rounded-lg bg-muted/30 border border-border">
-                      <p><code className="font-mono text-[11px]">id</code> - Graf-ID</p>
-                      <p><code className="font-mono text-[11px]">title</code> - Grafen sin tittel</p>
-                      <p><code className="font-mono text-[11px]">hc_config</code> - Komplett Highcharts-konfigurasjon</p>
-                      <p><code className="font-mono text-[11px]">chart_type</code> - Graftyp (column, line, etc.)</p>
-                      <p><code className="font-mono text-[11px]">api_source</code> - Datakilde (f.eks. helsedirektoratet)</p>
-                    </div>
-                  </div>
+              <div className="space-y-2">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">GET Endpoint</p>
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/40 border border-border">
+                  <code className="text-xs font-mono text-foreground flex-1 break-all">{apiBase}</code>
+                  <CopyButton text={apiBase} label="Kopier" />
                 </div>
-              );
-            })}
-          </div>
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">cURL</p>
+                <div className="rounded-lg border border-border overflow-auto bg-[hsl(222,47%,8%)]">
+                  <pre className="code-block text-[hsl(210,40%,85%)] p-3 text-[0.7rem]">{`curl -X GET "${apiBase}"`}</pre>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">JavaScript</p>
+                <div className="rounded-lg border border-border overflow-auto bg-[hsl(222,47%,8%)]">
+                  <pre className="code-block text-[hsl(210,40%,85%)] p-3 text-[0.7rem]">{`const res = await fetch("${apiBase}");
+      const { charts } = await res.json();
+      console.log(charts); // [{ id, title, chart_type, ... }]`}</pre>
+                </div>
+              </div>
+
+              <div className="text-xs text-muted-foreground space-y-1 px-3 py-2 rounded-lg bg-muted/30 border border-border">
+                <p className="font-medium text-foreground mb-2">Response: Array med grafer</p>
+                <p><code className="font-mono text-[11px]">id</code> - Brukes for å hente detaljer</p>
+                <p><code className="font-mono text-[11px]">title</code> - Grafens tittel</p>
+                <p><code className="font-mono text-[11px]">chart_type</code> - Type (column, line, etc.)</p>
+                <p><code className="font-mono text-[11px]">created_date, updated_date</code> - Datoer</p>
+              </div>
+            </div>
+
+            {/* Individual chart endpoints */}
+            <div className="space-y-4">
+              <h3 className="font-semibold text-foreground text-sm">Hent spesifikk graf</h3>
+              {charts.map(chart => {
+                const chartUrl = `${apiBase}?id=${chart.id}`;
+                const curlCmd = `curl -X GET "${chartUrl}"`;
+                const jsExample = `const res = await fetch("${chartUrl}");
+      const data = await res.json();
+      Highcharts.chart("container", data.hc_config);`;
+
+                return (
+                  <div key={chart.id} className="bg-card rounded-2xl border border-border p-6 shadow-sm space-y-4">
+                    <div>
+                      <h2 className="font-semibold text-foreground">{chart.title || "Uten tittel"}</h2>
+                      <p className="text-xs text-muted-foreground mt-1">ID: <code className="font-mono text-[11px] bg-muted/50 px-1.5 py-0.5 rounded">{chart.id}</code></p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">GET Endpoint</p>
+                      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/40 border border-border">
+                        <code className="text-xs font-mono text-foreground flex-1 break-all">{chartUrl}</code>
+                        <CopyButton text={chartUrl} label="Kopier" />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">cURL</p>
+                        <CopyButton text={curlCmd} label="Kopier" />
+                      </div>
+                      <div className="rounded-lg border border-border overflow-auto bg-[hsl(222,47%,8%)]">
+                        <pre className="code-block text-[hsl(210,40%,85%)] p-3 text-[0.7rem]">{curlCmd}</pre>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">JavaScript</p>
+                        <CopyButton text={jsExample} label="Kopier" />
+                      </div>
+                      <div className="rounded-lg border border-border overflow-auto bg-[hsl(222,47%,8%)]">
+                        <pre className="code-block text-[hsl(210,40%,85%)] p-3 text-[0.7rem]">{jsExample}</pre>
+                      </div>
+                    </div>
+
+                    <div className="text-xs text-muted-foreground space-y-1 px-3 py-2 rounded-lg bg-muted/30 border border-border">
+                      <p className="font-medium text-foreground mb-2">Response: Komplett graf-objekt</p>
+                      <p><code className="font-mono text-[11px]">hc_config</code> - Highcharts-konfigurasjon (klart til bruk)</p>
+                      <p><code className="font-mono text-[11px]">title, chart_type, api_source</code> - Metadata</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </>
         )}
       </div>
     </div>

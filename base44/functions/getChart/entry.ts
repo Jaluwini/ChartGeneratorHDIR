@@ -193,8 +193,23 @@ Deno.serve(async (req) => {
     const url = new URL(req.url);
     const id = url.searchParams.get("id");
 
-    if (!id) return Response.json({ error: "Mangler id" }, { status: 400 });
+    // If no ID provided, return list of all exposed charts
+    if (!id) {
+      const allCharts = await base44.asServiceRole.entities.SavedChart.list();
+      const exposedCharts = allCharts
+        .filter(c => c.exposed_in_api)
+        .map(c => ({
+          id: c.id,
+          title: c.title || "Uten tittel",
+          chart_type: c.chart_type,
+          api_source: c.api_source,
+          created_date: c.created_date,
+          updated_date: c.updated_date,
+        }));
+      return Response.json({ charts: exposedCharts });
+    }
 
+    // If ID provided, return full chart details with hc_config
     let chart;
     try {
       chart = await base44.asServiceRole.entities.SavedChart.get(id);
