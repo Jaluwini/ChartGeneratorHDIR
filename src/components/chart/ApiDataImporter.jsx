@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { detectColumns } from "@/lib/chartUtils";
 import { Loader2, AlertCircle, Search, ChevronDown } from "lucide-react";
 
-export default function ApiDataImporter({ onDataLoaded }) {
+export default function ApiDataImporter({ onDataLoaded, onIndicatorSelected }) {
   const [indicators, setIndicators] = useState([]);
   const [loadingList, setLoadingList] = useState(true);
   const [listError, setListError] = useState(null);
@@ -72,6 +72,7 @@ export default function ApiDataImporter({ onDataLoaded }) {
     setSelectedMeasureType(null);
     setSelectedEnhetType(null);
     fetchData(indicator, null, null);
+    if (onIndicatorSelected) onIndicatorSelected(indicator);
   };
 
   const handleFilterChange = (measureType, enhetType) => {

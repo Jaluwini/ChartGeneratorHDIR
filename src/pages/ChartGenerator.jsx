@@ -6,6 +6,7 @@ import ChartConfig from "@/components/chart/ChartConfig";
 import ChartPreview from "@/components/chart/ChartPreview";
 import ExportPanel from "@/components/chart/ExportPanel";
 import ApiDataImporter from "@/components/chart/ApiDataImporter";
+import ApiFieldPicker from "@/components/chart/ApiFieldPicker";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, BarChart3, Eye, Code2, AlertCircle, Save, BookMarked } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -44,6 +45,7 @@ export default function ChartGenerator() {
   const [validationError, setValidationError] = useState(null);
   const [dataSource, setDataSource] = useState("api"); // "file" | "api"
   const [apiSource, setApiSource] = useState(null); // "helsedirektoratet" etc.
+  const [selectedIndicator, setSelectedIndicator] = useState(null); // { id, tittel, jsonUrl }
   const chartRef = useRef(null);
 
   const handleDataLoaded = useCallback(({ data: newData, columns: newCols, source, title }) => {
@@ -81,6 +83,7 @@ export default function ChartGenerator() {
     setConfig(DEFAULT_CONFIG);
     setValidationError(null);
     setApiSource(null);
+    setSelectedIndicator(null);
     chartRef.current = null;
   };
 
@@ -173,7 +176,19 @@ export default function ChartGenerator() {
               </div>
             </div>
             {dataSource === "file" && <FileUploader onDataLoaded={handleDataLoaded} />}
-            {dataSource === "api" && <ApiDataImporter onDataLoaded={handleDataLoaded} />}
+            {dataSource === "api" && (
+                <ApiDataImporter
+                  onDataLoaded={handleDataLoaded}
+                  onIndicatorSelected={setSelectedIndicator}
+                />
+              )}
+              {dataSource === "api" && selectedIndicator && (
+                <ApiFieldPicker
+                  jsonUrl={selectedIndicator.jsonUrl}
+                  config={config}
+                  onChange={setConfig}
+                />
+              )}
             {data && <DataTable data={data} columns={columns} />}
           </div>
 

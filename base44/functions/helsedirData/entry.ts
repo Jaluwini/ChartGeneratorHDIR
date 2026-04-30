@@ -100,6 +100,32 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ACTION: fetchMeta — return metadata fields from the indicator
+    if (action === "fetchMeta") {
+      const { jsonUrl } = body;
+      if (!jsonUrl) return Response.json({ error: "Mangler jsonUrl" }, { status: 400 });
+
+      const res = await fetch(jsonUrl, { headers });
+      if (!res.ok) return Response.json({ error: `API feil: ${res.status}` }, { status: res.status });
+      const payload = await res.json();
+
+      const meta = {
+        title: payload?.Title || payload?.Tittel || null,
+        description: payload?.Description || payload?.Beskrivelse || null,
+        measureUnit: payload?.MeasureUnit || payload?.Enhet || null,
+        measureTypes: [...new Set((payload?.AttachmentDataRows || []).map(r => r.MeasureType).filter(Boolean))],
+        locationNames: [...new Set((payload?.AttachmentDataRows || []).map(r => r.LocationName).filter(Boolean))].slice(0, 20),
+        timeRange: (() => {
+          const years = (payload?.AttachmentDataRows || []).map(r => parseYear(r.TimeFrom)).filter(Boolean);
+          if (!years.length) return null;
+          return `${Math.min(...years)}–${Math.max(...years)}`;
+        })(),
+        rawKeys: payload?.AttachmentDataRows?.[0] ? Object.keys(payload.AttachmentDataRows[0]) : [],
+      };
+
+      return Response.json({ meta });
+    }
+
     return Response.json({ error: "Ukjent action" }, { status: 400 });
 
   } catch (error) {
