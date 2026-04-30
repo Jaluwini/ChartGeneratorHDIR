@@ -1,0 +1,25 @@
+{
+  "name": "SavedChart",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Chart title"
+    },
+    "hc_config": {
+      "type": "object",
+      "description": "Full Highcharts configuration object"
+    },
+    "api_source": {
+      "type": "string",
+      "description": "Source of data (e.g. helsedirektoratet)"
+    },
+    "chart_type": {
+      "type": "string",
+      "description": "Chart type (column, line, bar, etc.)"
+    }
+  },
+  "required": [
+    "title"
+  ]
+}

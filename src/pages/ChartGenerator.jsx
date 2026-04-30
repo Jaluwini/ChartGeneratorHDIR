@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { buildHighchartsConfig, DEFAULT_COLORS, suggestChartConfig } from "@/lib/chartUtils";
 import FileUploader from "@/components/chart/FileUploader";
 import DataTable from "@/components/chart/DataTable";
@@ -7,8 +7,10 @@ import ChartPreview from "@/components/chart/ChartPreview";
 import ExportPanel from "@/components/chart/ExportPanel";
 import ApiDataImporter from "@/components/chart/ApiDataImporter";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, BarChart3, Eye, Code2, AlertCircle } from "lucide-react";
+import { RefreshCw, BarChart3, Eye, Code2, AlertCircle, Save, BookMarked } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Link } from "react-router-dom";
+import { base44 } from "@/api/base44Client";
 
 const DEFAULT_CONFIG = {
   chartType: "column",
@@ -86,6 +88,23 @@ export default function ChartGenerator() {
     chartRef.current = chart;
   };
 
+  const [saving, setSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
+  const handleSave = async () => {
+    if (!hcConfig) return;
+    setSaving(true);
+    await base44.entities.SavedChart.create({
+      title: config.title || "Uten tittel",
+      hc_config: hcConfig,
+      api_source: apiSource,
+      chart_type: config.chartType,
+    });
+    setSaving(false);
+    setSaveSuccess(true);
+    setTimeout(() => setSaveSuccess(false), 2500);
+  };
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Top bar */}
@@ -100,15 +119,34 @@ export default function ChartGenerator() {
               <span className="hidden sm:inline text-xs text-muted-foreground ml-2">Build charts visually, export anywhere</span>
             </div>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleReset}
-            className="gap-1.5 text-xs h-8 text-muted-foreground hover:text-foreground"
-          >
-            <RefreshCw className="w-3.5 h-3.5" />
-            Reset chart
-          </Button>
+          <div className="flex items-center gap-2">
+            <Link to="/saved">
+              <Button variant="ghost" size="sm" className="gap-1.5 text-xs h-8 text-muted-foreground hover:text-foreground">
+                <BookMarked className="w-3.5 h-3.5" />
+                Mine grafer
+              </Button>
+            </Link>
+            {hcConfig && (
+              <Button
+                size="sm"
+                onClick={handleSave}
+                disabled={saving}
+                className={`gap-1.5 text-xs h-8 transition-all ${saveSuccess ? "bg-green-600 hover:bg-green-600" : ""}`}
+              >
+                <Save className="w-3.5 h-3.5" />
+                {saving ? "Lagrer…" : saveSuccess ? "Lagret!" : "Lagre graf"}
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleReset}
+              className="gap-1.5 text-xs h-8 text-muted-foreground hover:text-foreground"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              Reset
+            </Button>
+          </div>
         </div>
       </header>
 
