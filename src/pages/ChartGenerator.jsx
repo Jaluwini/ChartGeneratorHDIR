@@ -58,7 +58,8 @@ export default function ChartGenerator() {
       xAxis: suggested.xAxis,
       yAxes: suggested.yAxes,
       chartType: suggested.chartType || prev.chartType,
-      title: title || prev.title,
+      // Don't overwrite title if it's locked to API (ApiFieldPicker handles it)
+      title: prev.titleFromApi ? prev.title : (title || prev.title),
     }));
     setValidationError(null);
   }, []);

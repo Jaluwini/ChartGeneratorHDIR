@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Loader2, RefreshCw } from "lucide-react";
+import { Loader2, Link, Link2Off } from "lucide-react";
 
 /**
  * A hybrid input: shows a text field the user can type in,
@@ -69,9 +69,23 @@ export default function ApiFieldPicker({ jsonUrl, config, onChange }) {
       .finally(() => setLoading(false));
   }, [jsonUrl]);
 
+  const titleLocked = !!config.titleFromApi;
+
+  // When locked, always keep config.title in sync with meta.title
+  useEffect(() => {
+    if (titleLocked && meta?.title) {
+      onChange({ ...config, title: meta.title });
+    }
+  }, [meta?.title, titleLocked]);
+
   if (!jsonUrl) return null;
 
   const set = (key, val) => onChange({ ...config, [key]: val });
+
+  const toggleTitleLock = () => {
+    const nowLocked = !titleLocked;
+    onChange({ ...config, titleFromApi: nowLocked, title: nowLocked && meta?.title ? meta.title : config.title });
+  };
 
   // Build suggestion lists from meta
   const titleSuggestions = [meta?.title, ...(meta?.measureTypes || [])].filter(Boolean);
@@ -88,13 +102,38 @@ export default function ApiFieldPicker({ jsonUrl, config, onChange }) {
 
       {meta && (
         <div className="space-y-2">
-          <HybridInput
-            label="Tittel"
-            value={config.title}
-            onChange={v => set("title", v)}
-            suggestions={titleSuggestions}
-            placeholder="Hent fra API eller skriv selv…"
-          />
+          {/* Title with lock-to-API toggle */}
+          <div className="space-y-1">
+            <div className="flex items-center justify-between">
+              <label className="text-xs text-muted-foreground">Tittel</label>
+              <button
+                type="button"
+                onClick={toggleTitleLock}
+                title={titleLocked ? "Koble fra API — skriv manuelt" : "Lås til API-tittel (oppdateres automatisk)"}
+                className={`flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-md border transition-all ${
+                  titleLocked
+                    ? "bg-primary/10 text-primary border-primary/30 hover:bg-primary/20"
+                    : "text-muted-foreground border-border hover:bg-muted"
+                }`}
+              >
+                {titleLocked ? <Link className="w-3 h-3" /> : <Link2Off className="w-3 h-3" />}
+                {titleLocked ? "Låst til API" : "Lås til API"}
+              </button>
+            </div>
+            {titleLocked ? (
+              <div className="w-full h-8 px-2.5 rounded-lg border border-primary/40 bg-primary/5 text-xs text-foreground flex items-center gap-1.5 truncate">
+                <Link className="w-3 h-3 text-primary flex-shrink-0" />
+                <span className="truncate">{config.title || "…"}</span>
+              </div>
+            ) : (
+              <HybridInput
+                value={config.title}
+                onChange={v => set("title", v)}
+                suggestions={titleSuggestions}
+                placeholder="Hent fra API eller skriv selv…"
+              />
+            )}
+          </div>
           <HybridInput
             label="Undertittel"
             value={config.subtitle}
