@@ -290,7 +290,7 @@ export function buildHighchartsConfig(config, data) {
         },
     series,
     credits: config.sourceName
-      ? { enabled: true, text: config.sourceName, href: config.sourceUrl || "" }
+      ? { enabled: true, text: `Kilde: ${config.sourceName}`, href: config.sourceUrl || null, style: { cursor: config.sourceUrl ? "pointer" : "default", color: config.sourceUrl ? "#4f6ef7" : "#888", fontSize: "11px" } }
       : { enabled: false },
     exporting: { enabled: false }
   };

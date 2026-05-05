@@ -323,6 +323,23 @@ export default function ChartConfig({ config, onChange, columns, hideLabels = fa
       <Section title="Kilde" defaultOpen={false}>
         <TextField label="Kildenavn" value={config.sourceName || ""} onChange={v => set("sourceName", v)} placeholder="f.eks. SSB, Helsedirektoratet" />
         <TextField label="Kilde-URL (valgfri)" value={config.sourceUrl || ""} onChange={v => set("sourceUrl", v)} placeholder="https://..." />
+        {config.sourceName && (
+          <div className="px-3 py-2 rounded-lg bg-muted/50 text-xs text-muted-foreground">
+            Vises som:{" "}
+            {config.sourceUrl ? (
+              <a
+                href={config.sourceUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="text-primary underline underline-offset-2 font-medium hover:text-primary/80"
+              >
+                Kilde: {config.sourceName}
+              </a>
+            ) : (
+              <span className="text-foreground font-medium">Kilde: {config.sourceName}</span>
+            )}
+          </div>
+        )}
       </Section>
 
       {/* Colors */}
