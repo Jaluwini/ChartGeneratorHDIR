@@ -29,13 +29,13 @@ const DEFAULT_CONFIG = {
   decimals: 0,
   height: 420,
   width: null,
-  tooltipFormat: "",
+  tooltipFormat: ""
 };
 
 const PREVIEW_TABS = [
-  { id: "preview", label: "Preview", icon: Eye },
-  { id: "export", label: "JSON / HTML", icon: Code2 },
-];
+{ id: "preview", label: "Preview", icon: Eye },
+{ id: "export", label: "JSON / HTML", icon: Code2 }];
+
 
 export default function ChartGenerator() {
   const [data, setData] = useState(null);
@@ -53,15 +53,15 @@ export default function ChartGenerator() {
     setColumns(newCols);
     if (source) setApiSource(source);
     const suggested = suggestChartConfig(newCols);
-    setConfig(prev => ({
+    setConfig((prev) => ({
       ...prev,
       xAxis: suggested.xAxis,
       yAxes: suggested.yAxes,
       chartType: suggested.chartType || prev.chartType,
       // Don't overwrite title if it's locked to API (ApiFieldPicker handles it)
-      title: prev.titleFromApi ? prev.title : (title || prev.title),
+      title: prev.titleFromApi ? prev.title : title || prev.title,
       // Store API filter selections so getChart can rebuild from fresh data
-      ...(savedJsonUrl ? { savedJsonUrl, savedMeasureType, savedEnhetType } : {}),
+      ...(savedJsonUrl ? { savedJsonUrl, savedMeasureType, savedEnhetType } : {})
     }));
     setValidationError(null);
   }, []);
@@ -104,7 +104,7 @@ export default function ChartGenerator() {
     const params = new URLSearchParams(window.location.search);
     const loadId = params.get("load");
     if (!loadId) return;
-    base44.entities.SavedChart.get(loadId).then(saved => {
+    base44.entities.SavedChart.get(loadId).then((saved) => {
       if (!saved) return;
       setSavedChartId(saved.id);
       setApiSource(saved.api_source || null);
@@ -118,15 +118,15 @@ export default function ChartGenerator() {
         const series = hc.series || [];
         const rows = categories.map((cat, i) => {
           const row = { [saved.chart_config.xAxis || "Kategori"]: cat };
-          series.forEach(s => {
+          series.forEach((s) => {
             row[s.name] = s.data?.[i] ?? null;
           });
           return row;
         });
         const cols = [
-          { name: saved.chart_config.xAxis || "Kategori", type: "string" },
-          ...series.map(s => ({ name: s.name, type: "number" })),
-        ];
+        { name: saved.chart_config.xAxis || "Kategori", type: "string" },
+        ...series.map((s) => ({ name: s.name, type: "number" }))];
+
         setData(rows);
         setColumns(cols);
       }
@@ -142,7 +142,7 @@ export default function ChartGenerator() {
         hc_config: hcConfig,
         chart_config: config,
         api_source: apiSource,
-        chart_type: config.chartType,
+        chart_type: config.chartType
       });
     } else {
       const created = await base44.entities.SavedChart.create({
@@ -150,7 +150,7 @@ export default function ChartGenerator() {
         hc_config: hcConfig,
         chart_config: config,
         api_source: apiSource,
-        chart_type: config.chartType,
+        chart_type: config.chartType
       });
       setSavedChartId(created.id);
     }
@@ -169,8 +169,8 @@ export default function ChartGenerator() {
               <BarChart3 className="w-4.5 h-4.5 text-primary w-[18px] h-[18px]" />
             </div>
             <div>
-              <span className="font-semibold text-sm text-foreground">Highcharts Generator</span>
-              <span className="hidden sm:inline text-xs text-muted-foreground ml-2">Build charts visually, export anywhere</span>
+              <span className="font-semibold text-sm text-foreground">ChartGenerator</span>
+              <span className="hidden sm:inline text-xs text-muted-foreground ml-2"></span>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -180,23 +180,23 @@ export default function ChartGenerator() {
                 Mine grafer
               </Button>
             </Link>
-            {hcConfig && (
-              <Button
-                size="sm"
-                onClick={handleSave}
-                disabled={saving}
-                className={`gap-1.5 text-xs h-8 transition-all ${saveSuccess ? "bg-green-600 hover:bg-green-600" : ""}`}
-              >
+            {hcConfig &&
+            <Button
+              size="sm"
+              onClick={handleSave}
+              disabled={saving}
+              className={`gap-1.5 text-xs h-8 transition-all ${saveSuccess ? "bg-green-600 hover:bg-green-600" : ""}`}>
+              
                 <Save className="w-3.5 h-3.5" />
                 {saving ? "Lagrer…" : saveSuccess ? "Lagret!" : "Lagre graf"}
               </Button>
-            )}
+            }
             <Button
               variant="ghost"
               size="sm"
               onClick={handleReset}
-              className="gap-1.5 text-xs h-8 text-muted-foreground hover:text-foreground"
-            >
+              className="gap-1.5 text-xs h-8 text-muted-foreground hover:text-foreground">
+              
               <RefreshCw className="w-3.5 h-3.5" />
               Reset
             </Button>
@@ -214,112 +214,112 @@ export default function ChartGenerator() {
               <div className="flex rounded-lg border border-border overflow-hidden text-[11px] font-medium">
                 <button
                   onClick={() => setDataSource("file")}
-                  className={`px-2.5 py-1 transition-colors ${dataSource === "file" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}
-                >
+                  className={`px-2.5 py-1 transition-colors ${dataSource === "file" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}>
+                  
                   Fil
                 </button>
                 <button
                   onClick={() => setDataSource("api")}
-                  className={`px-2.5 py-1 transition-colors ${dataSource === "api" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}
-                >
+                  className={`px-2.5 py-1 transition-colors ${dataSource === "api" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}>
+                  
                   API
                 </button>
               </div>
             </div>
             {dataSource === "file" && <FileUploader onDataLoaded={handleDataLoaded} />}
-            {dataSource === "api" && (
-                <ApiDataImporter
-                  onDataLoaded={handleDataLoaded}
-                  onIndicatorSelected={setSelectedIndicator}
-                />
-              )}
-              {dataSource === "api" && selectedIndicator && (
-                <ApiFieldPicker
-                  jsonUrl={selectedIndicator.jsonUrl}
-                  config={config}
-                  onChange={setConfig}
-                />
-              )}
+            {dataSource === "api" &&
+            <ApiDataImporter
+              onDataLoaded={handleDataLoaded}
+              onIndicatorSelected={setSelectedIndicator} />
+
+            }
+              {dataSource === "api" && selectedIndicator &&
+            <ApiFieldPicker
+              jsonUrl={selectedIndicator.jsonUrl}
+              config={config}
+              onChange={setConfig} />
+
+            }
             {data && <DataTable data={data} columns={columns} />}
           </div>
 
           {/* Config section */}
-          {data && (
-            <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-card rounded-2xl border border-border p-4 shadow-sm"
-            >
+          {data &&
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-card rounded-2xl border border-border p-4 shadow-sm">
+            
               <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Chart Configuration</h2>
               <ChartConfig config={config} onChange={setConfig} columns={columns} hideLabels={dataSource === "api" && !!selectedIndicator} />
             </motion.div>
-          )}
+          }
         </aside>
 
         {/* Right panel */}
         <main className="flex-1 min-w-0 flex flex-col gap-4">
           {/* Validation error */}
           <AnimatePresence>
-            {validationError && (
-              <motion.div
-                initial={{ opacity: 0, y: -8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                className="flex items-start gap-2.5 px-4 py-3 rounded-xl bg-destructive/10 text-destructive text-sm border border-destructive/20"
-              >
+            {validationError &&
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              className="flex items-start gap-2.5 px-4 py-3 rounded-xl bg-destructive/10 text-destructive text-sm border border-destructive/20">
+              
                 <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
                 {validationError}
               </motion.div>
-            )}
+            }
           </AnimatePresence>
 
           {/* Tab bar */}
           <div className="flex items-center gap-1 p-1 bg-card rounded-xl border border-border w-fit shadow-sm">
-            {PREVIEW_TABS.map(t => (
-              <button
-                key={t.id}
-                onClick={() => setActiveTab(t.id)}
-                className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-medium transition-all
-                  ${activeTab === t.id
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                  }`}
-              >
+            {PREVIEW_TABS.map((t) =>
+            <button
+              key={t.id}
+              onClick={() => setActiveTab(t.id)}
+              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-medium transition-all
+                  ${activeTab === t.id ?
+              "bg-primary text-primary-foreground shadow-sm" :
+              "text-muted-foreground hover:text-foreground hover:bg-muted/50"}`
+              }>
+              
                 <t.icon className="w-3.5 h-3.5" />
                 {t.label}
               </button>
-            ))}
+            )}
           </div>
 
           {/* Preview area */}
           <div className="flex-1 bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
             <AnimatePresence mode="wait">
-              {activeTab === "preview" && (
-                <motion.div
-                  key="preview"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="p-4 md:p-6"
-                >
+              {activeTab === "preview" &&
+              <motion.div
+                key="preview"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="p-4 md:p-6">
+                
                   <ChartPreview hcConfig={hcConfig} onChartReady={handleChartReady} />
                 </motion.div>
-              )}
-              {activeTab === "export" && (
-                <motion.div
-                  key="export"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="p-4 md:p-6 h-full min-h-[500px] flex flex-col"
-                >
+              }
+              {activeTab === "export" &&
+              <motion.div
+                key="export"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="p-4 md:p-6 h-full min-h-[500px] flex flex-col">
+                
                   <ExportPanel hcConfig={hcConfig} chartRef={chartRef} apiSource={apiSource} savedChartId={savedChartId} />
                 </motion.div>
-              )}
+              }
             </AnimatePresence>
           </div>
         </main>
       </div>
-    </div>
-  );
+    </div>);
+
 }
