@@ -174,9 +174,11 @@ export default function SavedCharts() {
     return acc;
   }, {});
 
-  const ChartCard = ({ chart }) => (
+  const ChartCard = ({ chart }) => {
+    const isEditingFolder = editingFolderFor === chart.id;
+    return (
     <div key={chart.id} className="relative bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
-      {editingFolderFor === chart.id && (
+      {isEditingFolder && (
         <FolderEditor
           chart={chart}
           folders={folders}
@@ -233,7 +235,8 @@ export default function SavedCharts() {
         </div>
       </div>
     </div>
-  );
+    );
+  };
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
