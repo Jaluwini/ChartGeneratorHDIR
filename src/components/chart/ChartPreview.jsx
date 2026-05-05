@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import Highcharts from "highcharts";
+import "highcharts/modules/exporting";
+import "highcharts/modules/export-data";
+import "highcharts/modules/offline-exporting";
 import { AlertCircle, BarChart2 } from "lucide-react";
 
 export default function ChartPreview({ hcConfig, onChartReady }) {
@@ -33,6 +36,14 @@ export default function ChartPreview({ hcConfig, onChartReady }) {
         ...hcConfig.chart,
         animation: { duration: 400 },
         style: { fontFamily: "Inter, sans-serif" }
+      },
+      exporting: {
+        enabled: true,
+        buttons: {
+          contextButton: {
+            menuItems: ["downloadPNG", "downloadJPEG", "downloadSVG", "downloadPDF", "separator", "downloadCSV", "downloadXLS"]
+          }
+        }
       }
     });
 
