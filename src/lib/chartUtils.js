@@ -289,7 +289,9 @@ export function buildHighchartsConfig(config, data) {
           }
         },
     series,
-    credits: { enabled: false },
+    credits: config.sourceName
+      ? { enabled: true, text: config.sourceName, href: config.sourceUrl || "" }
+      : { enabled: false },
     exporting: { enabled: false }
   };
 

@@ -305,6 +305,12 @@ export default function ChartConfig({ config, onChange, columns, hideLabels = fa
         </div>
       </Section>
 
+      {/* Source */}
+      <Section title="Kilde" defaultOpen={false}>
+        <TextField label="Kildenavn" value={config.sourceName || ""} onChange={v => set("sourceName", v)} placeholder="f.eks. SSB, Helsedirektoratet" />
+        <TextField label="Kilde-URL (valgfri)" value={config.sourceUrl || ""} onChange={v => set("sourceUrl", v)} placeholder="https://..." />
+      </Section>
+
       {/* Colors */}
       <Section title="Colors" defaultOpen={false}>
         <div className="grid grid-cols-5 gap-2">

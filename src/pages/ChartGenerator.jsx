@@ -144,13 +144,18 @@ export default function ChartGenerator() {
         ...(savedJsonUrl ? { savedJsonUrl, savedMeasureType, savedEnhetType } : {})
       };
 
+      const sourceFields = {
+        source_name: config.sourceName || null,
+        source_url: config.sourceUrl || null,
+      };
       if (savedChartId) {
         await base44.entities.SavedChart.update(savedChartId, {
           title: config.title || "Uten tittel",
           hc_config: hcConfig,
           chart_config: chartConfigToSave,
           api_source: apiSource,
-          chart_type: config.chartType
+          chart_type: config.chartType,
+          ...sourceFields
         });
       } else {
         const created = await base44.entities.SavedChart.create({
@@ -158,7 +163,8 @@ export default function ChartGenerator() {
           hc_config: hcConfig,
           chart_config: chartConfigToSave,
           api_source: apiSource,
-          chart_type: config.chartType
+          chart_type: config.chartType,
+          ...sourceFields
         });
         setSavedChartId(created.id);
       }

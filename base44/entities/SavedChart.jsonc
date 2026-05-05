@@ -30,6 +30,14 @@
     "folder": {
       "type": "string",
       "description": "Folder/category name for organizing charts"
+    },
+    "source_name": {
+      "type": "string",
+      "description": "Name of the data source"
+    },
+    "source_url": {
+      "type": "string",
+      "description": "URL of the data source"
     }
   },
   "required": [
