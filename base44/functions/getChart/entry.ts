@@ -206,7 +206,6 @@ Deno.serve(async (req) => {
             created_date: c.created_date,
             updated_date: c.updated_date,
           };
-          if (c.api_source) item.api_source = c.api_source;
           return item;
         });
       return Response.json({ charts: exposedCharts });
