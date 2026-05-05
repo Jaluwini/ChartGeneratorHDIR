@@ -5,6 +5,7 @@ import { Upload, FileSpreadsheet, AlertCircle, Database } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { detectColumns } from "@/lib/chartUtils";
 import { SAMPLE_DATA, SAMPLE_COLUMNS } from "@/lib/sampleData";
+import JsonRGuide from "./JsonRGuide";
 
 export default function FileUploader({ onDataLoaded }) {
   const inputRef = useRef(null);
@@ -181,6 +182,8 @@ export default function FileUploader({ onDataLoaded }) {
           <span>{error}</span>
         </div>
       )}
+
+      <JsonRGuide />
     </div>
   );
 }
