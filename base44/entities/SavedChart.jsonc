@@ -26,6 +26,10 @@
       "type": "boolean",
       "description": "Whether this chart is publicly accessible via the getChart API",
       "default": false
+    },
+    "folder": {
+      "type": "string",
+      "description": "Folder/category name for organizing charts"
     }
   },
   "required": [
