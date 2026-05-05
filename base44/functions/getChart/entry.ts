@@ -205,7 +205,7 @@ Deno.serve(async (req) => {
             chart_type: c.chart_type,
             created_date: c.created_date,
             updated_date: c.updated_date,
-            ...(c.folder ? { område: c.folder } : {})
+            area: c.folder || null
           };
           return item;
         });
