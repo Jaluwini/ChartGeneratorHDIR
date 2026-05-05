@@ -7,6 +7,23 @@ import HighchartsOfflineExporting from "highcharts/modules/offline-exporting";
 HighchartsExporting(Highcharts);
 HighchartsExportData(Highcharts);
 HighchartsOfflineExporting(Highcharts);
+
+Highcharts.setOptions({
+  lang: {
+    downloadPNG: "Last ned PNG-bilde",
+    downloadJPEG: "Last ned JPEG-bilde",
+    downloadSVG: "Last ned SVG-vektorbilde",
+    downloadPDF: "Last ned PDF-dokument",
+    downloadCSV: "Last ned CSV",
+    downloadXLS: "Last ned XLS",
+    viewData: "Vis datatabell",
+    viewFullscreen: "Vis i fullskjerm",
+    exitFullscreen: "Avslutt fullskjerm",
+    printChart: "Skriv ut graf",
+    contextButtonTitle: "Eksportér graf",
+  }
+});
+
 import { AlertCircle, BarChart2 } from "lucide-react";
 
 export default function ChartPreview({ hcConfig, onChartReady }) {
