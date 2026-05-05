@@ -4,6 +4,9 @@ import { Link, useNavigate } from "react-router-dom";
 import { BarChart3, Trash2, ArrowLeft, RefreshCw, Pencil, Globe, GlobeLock, Settings, Maximize2, X, Search, FolderOpen, Folder, FolderPlus, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Highcharts from "highcharts";
+import "highcharts/modules/exporting";
+import "highcharts/modules/export-data";
+import "highcharts/modules/offline-exporting";
 
 function MiniChart({ hcConfig }) {
   const containerRef = useRef(null);
@@ -34,8 +37,14 @@ function FullscreenChart({ chart, onClose }) {
     const chart_ = Highcharts.chart(containerRef.current, {
       ...chart.hc_config,
       chart: { ...chart.hc_config.chart, height: null, width: null, animation: false },
-      credits: { enabled: false },
-      exporting: { enabled: false },
+      exporting: {
+        enabled: true,
+        buttons: {
+          contextButton: {
+            menuItems: ["downloadPNG", "downloadJPEG", "downloadSVG", "downloadPDF", "separator", "downloadCSV", "downloadXLS"]
+          }
+        }
+      }
     });
     return () => chart_.destroy();
   }, [chart]);
