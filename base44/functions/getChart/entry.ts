@@ -198,14 +198,17 @@ Deno.serve(async (req) => {
       const allCharts = await base44.asServiceRole.entities.SavedChart.list();
       const exposedCharts = allCharts
         .filter(c => c.exposed_in_api)
-        .map(c => ({
-          id: c.id,
-          title: c.title || "Uten tittel",
-          chart_type: c.chart_type,
-          api_source: c.api_source,
-          created_date: c.created_date,
-          updated_date: c.updated_date,
-        }));
+        .map(c => {
+          const item = {
+            id: c.id,
+            title: c.title || "Uten tittel",
+            chart_type: c.chart_type,
+            created_date: c.created_date,
+            updated_date: c.updated_date,
+          };
+          if (c.api_source) item.api_source = c.api_source;
+          return item;
+        });
       return Response.json({ charts: exposedCharts });
     }
 

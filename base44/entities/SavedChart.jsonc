@@ -32,9 +32,6 @@
     "title"
   ],
   "rls": {
-    "create": {
-      "created_by": "{{user.email}}"
-    },
     "read": {
       "$or": [
         {
