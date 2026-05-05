@@ -203,7 +203,8 @@ export default function ChartGenerator() {
             <Button
               size="sm"
               onClick={handleSave}
-              disabled={saving}
+              disabled={saving || !config.title?.trim()}
+              title={!config.title?.trim() ? "Tittel er obligatorisk" : undefined}
               className={`gap-1.5 text-xs h-8 transition-all ${saveSuccess ? "bg-green-600 hover:bg-green-600" : ""}`}>
               
                 <Save className="w-3.5 h-3.5" />

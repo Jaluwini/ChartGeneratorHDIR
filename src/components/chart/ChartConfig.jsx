@@ -178,7 +178,21 @@ export default function ChartConfig({ config, onChange, columns, hideLabels = fa
       {/* Labels */}
       {!hideLabels && (
         <Section title="Etiketter og titler">
-          <TextField label="Graftittel" value={config.title} onChange={v => set("title", v)} placeholder="Min graf" />
+          <div className="space-y-1">
+            <Label className="text-xs text-muted-foreground flex items-center gap-1">
+              Graftittel <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              type="text"
+              value={config.title || ""}
+              onChange={e => set("title", e.target.value)}
+              placeholder="Min graf"
+              className={`h-8 text-sm ${!config.title ? "border-destructive focus-visible:ring-destructive/50" : ""}`}
+            />
+            {!config.title && (
+              <p className="text-[11px] text-destructive">Tittel er obligatorisk</p>
+            )}
+          </div>
           <TextField label="Undertittel" value={config.subtitle} onChange={v => set("subtitle", v)} placeholder="Valgfri undertittel" />
           <TextField label="X-aksetittel" value={config.xAxisTitle} onChange={v => set("xAxisTitle", v)} placeholder="Kategorier" />
           <TextField label="Y-aksetittel" value={config.yAxisTitle} onChange={v => set("yAxisTitle", v)} placeholder="Verdier" />
