@@ -136,27 +136,40 @@ export default function ChartGenerator() {
   const handleSave = async () => {
     if (!hcConfig) return;
     setSaving(true);
-    if (savedChartId) {
-      await base44.entities.SavedChart.update(savedChartId, {
-        title: config.title || "Uten tittel",
-        hc_config: hcConfig,
-        chart_config: config,
-        api_source: apiSource,
-        chart_type: config.chartType
-      });
-    } else {
-      const created = await base44.entities.SavedChart.create({
-        title: config.title || "Uten tittel",
-        hc_config: hcConfig,
-        chart_config: config,
-        api_source: apiSource,
-        chart_type: config.chartType
-      });
-      setSavedChartId(created.id);
+    try {
+      // Strip raw data rows from config before saving to avoid payload size issues
+      const { savedJsonUrl, savedMeasureType, savedEnhetType, ...configToSave } = config;
+      const chartConfigToSave = {
+        ...configToSave,
+        ...(savedJsonUrl ? { savedJsonUrl, savedMeasureType, savedEnhetType } : {})
+      };
+
+      if (savedChartId) {
+        await base44.entities.SavedChart.update(savedChartId, {
+          title: config.title || "Uten tittel",
+          hc_config: hcConfig,
+          chart_config: chartConfigToSave,
+          api_source: apiSource,
+          chart_type: config.chartType
+        });
+      } else {
+        const created = await base44.entities.SavedChart.create({
+          title: config.title || "Uten tittel",
+          hc_config: hcConfig,
+          chart_config: chartConfigToSave,
+          api_source: apiSource,
+          chart_type: config.chartType
+        });
+        setSavedChartId(created.id);
+      }
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 2500);
+    } catch (err) {
+      console.error("Save failed:", err);
+      alert("Lagring feilet: " + err.message);
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
-    setSaveSuccess(true);
-    setTimeout(() => setSaveSuccess(false), 2500);
   };
 
   return (
