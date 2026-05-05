@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Link, useNavigate } from "react-router-dom";
-import { BarChart3, Trash2, ArrowLeft, RefreshCw, Pencil, Globe, GlobeLock, Settings } from "lucide-react";
+import { BarChart3, Trash2, ArrowLeft, RefreshCw, Pencil, Globe, GlobeLock, Settings, Maximize2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Highcharts from "highcharts";
 
@@ -27,11 +27,39 @@ function MiniChart({ hcConfig }) {
   return <div ref={containerRef} />;
 }
 
+function FullscreenChart({ chart, onClose }) {
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    if (!containerRef.current || !chart.hc_config) return;
+    const chart_ = Highcharts.chart(containerRef.current, {
+      ...chart.hc_config,
+      chart: { ...chart.hc_config.chart, height: null, width: null, animation: false },
+      credits: { enabled: false },
+      exporting: { enabled: false },
+    });
+    return () => chart_.destroy();
+  }, [chart]);
+
+  return (
+    <div className="fixed inset-0 z-50 bg-background flex flex-col">
+      <div className="flex items-center justify-between px-6 py-3 border-b border-border bg-card">
+        <span className="font-semibold text-sm text-foreground">{chart.title || "Uten tittel"}</span>
+        <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8">
+          <X className="w-4 h-4" />
+        </Button>
+      </div>
+      <div ref={containerRef} className="flex-1 p-6" />
+    </div>
+  );
+}
+
 export default function SavedCharts() {
   const [charts, setCharts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(null);
   const [toggling, setToggling] = useState(null);
+  const [fullscreenChart, setFullscreenChart] = useState(null);
   const navigate = useNavigate();
 
   const handleToggleApi = async (chart) => {
@@ -60,6 +88,7 @@ export default function SavedCharts() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      {fullscreenChart && <FullscreenChart chart={fullscreenChart} onClose={() => setFullscreenChart(null)} />}
       <header className="sticky top-0 z-20 bg-card/80 backdrop-blur-md border-b border-border">
         <div className="max-w-[1600px] mx-auto px-4 md:px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
@@ -132,6 +161,15 @@ export default function SavedCharts() {
                       title={chart.exposed_in_api ? "Skjul fra API" : "Eksponer i API"}
                     >
                       {chart.exposed_in_api ? <Globe className="w-4 h-4" /> : <GlobeLock className="w-4 h-4" />}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-primary"
+                      onClick={() => setFullscreenChart(chart)}
+                      title="Fullskjerm"
+                    >
+                      <Maximize2 className="w-4 h-4" />
                     </Button>
                     <Button
                       variant="ghost"
