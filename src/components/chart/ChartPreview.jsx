@@ -1,8 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import Highcharts from "highcharts";
-import "highcharts/modules/exporting";
-import "highcharts/modules/export-data";
-import "highcharts/modules/offline-exporting";
+import HighchartsExporting from "highcharts/modules/exporting";
+import HighchartsExportData from "highcharts/modules/export-data";
+import HighchartsOfflineExporting from "highcharts/modules/offline-exporting";
+
+HighchartsExporting(Highcharts);
+HighchartsExportData(Highcharts);
+HighchartsOfflineExporting(Highcharts);
 import { AlertCircle, BarChart2 } from "lucide-react";
 
 export default function ChartPreview({ hcConfig, onChartReady }) {

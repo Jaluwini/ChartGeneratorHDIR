@@ -4,9 +4,13 @@ import { Link, useNavigate } from "react-router-dom";
 import { BarChart3, Trash2, ArrowLeft, RefreshCw, Pencil, Globe, GlobeLock, Settings, Maximize2, X, Search, FolderOpen, Folder, FolderPlus, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Highcharts from "highcharts";
-import "highcharts/modules/exporting";
-import "highcharts/modules/export-data";
-import "highcharts/modules/offline-exporting";
+import HighchartsExporting from "highcharts/modules/exporting";
+import HighchartsExportData from "highcharts/modules/export-data";
+import HighchartsOfflineExporting from "highcharts/modules/offline-exporting";
+
+HighchartsExporting(Highcharts);
+HighchartsExportData(Highcharts);
+HighchartsOfflineExporting(Highcharts);
 
 function MiniChart({ hcConfig }) {
   const containerRef = useRef(null);
