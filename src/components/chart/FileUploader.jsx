@@ -75,8 +75,29 @@ export default function FileUploader({ onDataLoaded }) {
       };
       reader.onerror = () => setError("Failed to read file.");
       reader.readAsArrayBuffer(file);
+    } else if (ext === "json") {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        let parsed;
+        try {
+          parsed = JSON.parse(e.target.result);
+        } catch {
+          setError("Failed to parse JSON file. Make sure it is valid JSON.");
+          return;
+        }
+        // Support both array of objects and { data: [...] }
+        const rows = Array.isArray(parsed) ? parsed : Array.isArray(parsed?.data) ? parsed.data : null;
+        if (!rows || rows.length === 0) {
+          setError("JSON file must contain an array of objects.");
+          return;
+        }
+        const columns = detectColumns(rows);
+        onDataLoaded({ data: rows, columns, fileName: file.name });
+      };
+      reader.onerror = () => setError("Failed to read file.");
+      reader.readAsText(file);
     } else {
-      setError("Unsupported file type. Please upload .csv, .xls, or .xlsx.");
+      setError("Unsupported file type. Please upload .csv, .xls, .xlsx, or .json.");
     }
   };
 
@@ -111,9 +132,9 @@ export default function FileUploader({ onDataLoaded }) {
         </div>
         <div className="text-center">
           <p className="text-sm font-medium text-foreground">Drop file here or click to upload</p>
-          <p className="text-xs text-muted-foreground mt-0.5">CSV, XLS, XLSX supported</p>
+          <p className="text-xs text-muted-foreground mt-0.5">CSV, XLS, XLSX, JSON supported</p>
         </div>
-        <input ref={inputRef} type="file" accept=".csv,.xls,.xlsx" className="hidden" onChange={onFileInput} />
+        <input ref={inputRef} type="file" accept=".csv,.xls,.xlsx,.json" className="hidden" onChange={onFileInput} />
       </div>
 
       <Button
