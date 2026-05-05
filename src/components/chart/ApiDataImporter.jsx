@@ -1,23 +1,77 @@
 import { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { detectColumns } from "@/lib/chartUtils";
-import { Loader2, AlertCircle, Search, ChevronDown } from "lucide-react";
+import { Loader2, AlertCircle, Search, Maximize2, X } from "lucide-react";
+
+function FullscreenIndicatorList({ indicators, selected, loadingData, onSelect, onClose }) {
+  const [search, setSearch] = useState("");
+  const filtered = indicators.filter(ind =>
+    ind.tittel.toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <div className="fixed inset-0 z-50 bg-background flex flex-col">
+      <div className="flex items-center justify-between px-6 py-3 border-b border-border bg-card">
+        <span className="font-semibold text-sm text-foreground">Velg indikator — Helsedirektoratet</span>
+        <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+      <div className="px-6 py-3 border-b border-border bg-card">
+        <div className="relative max-w-lg">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+          <input
+            type="text"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Søk etter indikator…"
+            autoFocus
+            className="w-full pl-9 pr-3 h-9 rounded-lg border border-input bg-background text-sm text-foreground outline-none focus:ring-2 focus:ring-ring/50 transition-all"
+          />
+        </div>
+      </div>
+      <div className="flex-1 overflow-y-auto px-6 py-4">
+        <p className="text-xs text-muted-foreground mb-3">{filtered.length} indikatorer</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 max-w-5xl">
+          {filtered.length === 0 && (
+            <p className="text-sm text-muted-foreground py-8 col-span-full text-center">Ingen treff</p>
+          )}
+          {filtered.map(ind => (
+            <button
+              key={ind.id}
+              onClick={() => { onSelect(ind); onClose(); }}
+              disabled={loadingData}
+              className={`text-left px-4 py-3 rounded-xl border transition-all ${
+                selected?.id === ind.id
+                  ? "border-primary bg-primary/5"
+                  : "border-border hover:bg-muted/40 hover:border-primary/40"
+              } disabled:opacity-50`}
+            >
+              <p className="text-sm font-medium text-foreground leading-snug">{ind.tittel}</p>
+              <p className="text-[11px] text-muted-foreground mt-1 font-mono">{ind.id}</p>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function ApiDataImporter({ onDataLoaded, onIndicatorSelected }) {
   const [indicators, setIndicators] = useState([]);
   const [loadingList, setLoadingList] = useState(true);
   const [listError, setListError] = useState(null);
   const [search, setSearch] = useState("");
+  const [fullscreen, setFullscreen] = useState(false);
 
   const [selected, setSelected] = useState(null);
-  const [filterOptions, setFilterOptions] = useState(null); // { measureTypes, enhetTypes }
+  const [filterOptions, setFilterOptions] = useState(null);
   const [selectedMeasureType, setSelectedMeasureType] = useState(null);
   const [selectedEnhetType, setSelectedEnhetType] = useState(null);
 
   const [loadingData, setLoadingData] = useState(false);
   const [dataError, setDataError] = useState(null);
 
-  // Load indicator list on mount
   useEffect(() => {
     const load = async () => {
       setLoadingList(true);
@@ -33,7 +87,6 @@ export default function ApiDataImporter({ onDataLoaded, onIndicatorSelected }) {
     load();
   }, []);
 
-  // Fetch data whenever selected indicator or filters change
   const fetchData = async (indicator, measureType, enhetType) => {
     setLoadingData(true);
     setDataError(null);
@@ -51,7 +104,6 @@ export default function ApiDataImporter({ onDataLoaded, onIndicatorSelected }) {
         return;
       }
 
-      // Set filter options the first time
       if (opts) {
         setFilterOptions(opts);
         if (!measureType) setSelectedMeasureType(selectedFilters.measureType);
@@ -111,120 +163,129 @@ export default function ApiDataImporter({ onDataLoaded, onIndicatorSelected }) {
   }
 
   return (
-    <div className="space-y-3">
-      <p className="text-xs text-muted-foreground">
-        Velg en kvalitetsindikator fra Helsedirektoratet:
-      </p>
-
-      {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
-        <input
-          type="text"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          placeholder="Søk etter indikator…"
-          className="w-full pl-8 pr-3 h-8 rounded-lg border border-input bg-background text-xs text-foreground outline-none focus:ring-2 focus:ring-ring/50 transition-all"
+    <>
+      {fullscreen && (
+        <FullscreenIndicatorList
+          indicators={indicators}
+          selected={selected}
+          loadingData={loadingData}
+          onSelect={handleSelect}
+          onClose={() => setFullscreen(false)}
         />
-      </div>
+      )}
 
-      {/* Indicator list */}
-      <div className="space-y-1 max-h-52 overflow-y-auto pr-1">
-        {filtered.length === 0 && (
-          <p className="text-xs text-muted-foreground text-center py-4">Ingen treff</p>
-        )}
-        {filtered.map(ind => (
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <p className="text-xs text-muted-foreground">Velg en kvalitetsindikator fra Helsedirektoratet:</p>
           <button
-            key={ind.id}
-            onClick={() => handleSelect(ind)}
-            disabled={loadingData}
-            className={`w-full text-left px-3 py-2.5 rounded-lg border transition-all ${
-              selected?.id === ind.id
-                ? "border-primary bg-primary/5"
-                : "border-border hover:bg-muted/40"
-            } disabled:opacity-50`}
+            onClick={() => setFullscreen(true)}
+            className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+            title="Vis i fullskjerm"
           >
-            <p className="text-xs font-medium text-foreground leading-snug">{ind.tittel}</p>
+            <Maximize2 className="w-3.5 h-3.5" />
           </button>
-        ))}
+        </div>
+
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+          <input
+            type="text"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Søk etter indikator…"
+            className="w-full pl-8 pr-3 h-8 rounded-lg border border-input bg-background text-xs text-foreground outline-none focus:ring-2 focus:ring-ring/50 transition-all"
+          />
+        </div>
+
+        {/* Indicator list */}
+        <div className="space-y-1 max-h-52 overflow-y-auto pr-1">
+          {filtered.length === 0 && (
+            <p className="text-xs text-muted-foreground text-center py-4">Ingen treff</p>
+          )}
+          {filtered.map(ind => (
+            <button
+              key={ind.id}
+              onClick={() => handleSelect(ind)}
+              disabled={loadingData}
+              className={`w-full text-left px-3 py-2.5 rounded-lg border transition-all ${
+                selected?.id === ind.id
+                  ? "border-primary bg-primary/5"
+                  : "border-border hover:bg-muted/40"
+              } disabled:opacity-50`}
+            >
+              <p className="text-xs font-medium text-foreground leading-snug">{ind.tittel}</p>
+            </button>
+          ))}
+        </div>
+
+        {/* Filter options */}
+        {filterOptions && !loadingData && (
+          <div className="space-y-2 pt-1 border-t border-border">
+            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Filtrer data</p>
+
+            {filterOptions.enhetTypes.length > 1 && (
+              <div className="space-y-1">
+                <label className="text-xs text-muted-foreground">Nivå</label>
+                <div className="flex flex-wrap gap-1.5">
+                  {filterOptions.enhetTypes.map(et => (
+                    <button
+                      key={et}
+                      onClick={() => { setSelectedEnhetType(et); handleFilterChange(selectedMeasureType, et); }}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-all ${
+                        selectedEnhetType === et
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "border-border hover:bg-muted"
+                      }`}
+                    >
+                      {et}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {filterOptions.measureTypes.length > 1 && (
+              <div className="space-y-1">
+                <label className="text-xs text-muted-foreground">Måletype</label>
+                <div className="flex flex-wrap gap-1.5">
+                  {filterOptions.measureTypes.map(mt => (
+                    <button
+                      key={mt}
+                      onClick={() => { setSelectedMeasureType(mt); handleFilterChange(mt, selectedEnhetType); }}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-all ${
+                        selectedMeasureType === mt
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "border-border hover:bg-muted"
+                      }`}
+                    >
+                      {mt}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {loadingData && (
+          <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-muted/50 text-xs text-muted-foreground">
+            <Loader2 className="w-3.5 h-3.5 animate-spin flex-shrink-0" />
+            {selected ? `Henter data for «${selected.tittel}»…` : "Henter data…"}
+          </div>
+        )}
+
+        {dataError && (
+          <div className="flex items-start gap-2 px-3 py-2.5 rounded-lg bg-destructive/10 border border-destructive/20 text-xs text-destructive">
+            <AlertCircle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
+            <span>{dataError}</span>
+          </div>
+        )}
+
+        <p className="text-[10px] text-muted-foreground text-center">
+          Kilde: <a href="https://www.helsedirektoratet.no" target="_blank" rel="noreferrer" className="underline underline-offset-2">Helsedirektoratet</a>
+        </p>
       </div>
-
-      {/* Filter options — shown after indicator is selected */}
-      {filterOptions && !loadingData && (
-        <div className="space-y-2 pt-1 border-t border-border">
-          <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Filtrer data</p>
-
-          {/* Enhet type */}
-          {filterOptions.enhetTypes.length > 1 && (
-            <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">Nivå</label>
-              <div className="flex flex-wrap gap-1.5">
-                {filterOptions.enhetTypes.map(et => (
-                  <button
-                    key={et}
-                    onClick={() => {
-                      setSelectedEnhetType(et);
-                      handleFilterChange(selectedMeasureType, et);
-                    }}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-all ${
-                      selectedEnhetType === et
-                        ? "bg-primary text-primary-foreground border-primary"
-                        : "border-border hover:bg-muted"
-                    }`}
-                  >
-                    {et}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Measure type */}
-          {filterOptions.measureTypes.length > 1 && (
-            <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">Måletype</label>
-              <div className="flex flex-wrap gap-1.5">
-                {filterOptions.measureTypes.map(mt => (
-                  <button
-                    key={mt}
-                    onClick={() => {
-                      setSelectedMeasureType(mt);
-                      handleFilterChange(mt, selectedEnhetType);
-                    }}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-all ${
-                      selectedMeasureType === mt
-                        ? "bg-primary text-primary-foreground border-primary"
-                        : "border-border hover:bg-muted"
-                    }`}
-                  >
-                    {mt}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Loading state */}
-      {loadingData && (
-        <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-muted/50 text-xs text-muted-foreground">
-          <Loader2 className="w-3.5 h-3.5 animate-spin flex-shrink-0" />
-          {selected ? `Henter data for «${selected.tittel}»…` : "Henter data…"}
-        </div>
-      )}
-
-      {/* Error state */}
-      {dataError && (
-        <div className="flex items-start gap-2 px-3 py-2.5 rounded-lg bg-destructive/10 border border-destructive/20 text-xs text-destructive">
-          <AlertCircle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
-          <span>{dataError}</span>
-        </div>
-      )}
-
-      <p className="text-[10px] text-muted-foreground text-center">
-        Kilde: <a href="https://www.helsedirektoratet.no" target="_blank" rel="noreferrer" className="underline underline-offset-2">Helsedirektoratet</a>
-      </p>
-    </div>
+    </>
   );
 }
