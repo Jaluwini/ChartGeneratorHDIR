@@ -72,8 +72,8 @@ export default function ChartPreview({ hcConfig, onChartReady }) {
           <BarChart2 className="w-8 h-8 opacity-40" />
         </div>
         <div className="text-center">
-          <p className="text-sm font-medium">No chart to preview</p>
-          <p className="text-xs mt-1 opacity-70">Upload data and configure chart settings</p>
+          <p className="text-sm font-medium">Ingen graf å forhåndsvise</p>
+          <p className="text-xs mt-1 opacity-70">Last opp data og konfigurer grafinnstillinger</p>
         </div>
       </div>
     );

@@ -33,7 +33,7 @@ const DEFAULT_CONFIG = {
 };
 
 const PREVIEW_TABS = [
-{ id: "preview", label: "Preview", icon: Eye },
+{ id: "preview", label: "Forhåndsvisning", icon: Eye },
 { id: "export", label: "JSON / HTML", icon: Code2 }];
 
 
@@ -208,6 +208,7 @@ export default function ChartGenerator() {
               
                 <Save className="w-3.5 h-3.5" />
                 {saving ? "Lagrer…" : saveSuccess ? "Lagret!" : "Lagre graf"}
+
               </Button>
             }
             <Button
@@ -229,7 +230,7 @@ export default function ChartGenerator() {
           {/* Upload section */}
           <div className="bg-card rounded-2xl border border-border p-4 space-y-3 shadow-sm">
             <div className="flex items-center justify-between">
-              <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Data Source</h2>
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Datakilde</h2>
               <div className="flex rounded-lg border border-border overflow-hidden text-[11px] font-medium">
                 <button
                   onClick={() => setDataSource("file")}
@@ -269,7 +270,7 @@ export default function ChartGenerator() {
             animate={{ opacity: 1, y: 0 }}
             className="bg-card rounded-2xl border border-border p-4 shadow-sm">
             
-              <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Chart Configuration</h2>
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Grafkonfigurasjon</h2>
               <ChartConfig config={config} onChange={setConfig} columns={columns} hideLabels={dataSource === "api" && !!selectedIndicator} />
             </motion.div>
           }

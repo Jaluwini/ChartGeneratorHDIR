@@ -98,7 +98,7 @@ export default function ChartConfig({ config, onChange, columns, hideLabels = fa
   return (
     <div className="space-y-2.5">
       {/* Chart type */}
-      <Section title="Chart Type">
+      <Section title="Graftype">
         <div className="grid grid-cols-2 gap-1.5">
           {CHART_TYPES.map(ct => (
             <button
@@ -117,16 +117,16 @@ export default function ChartConfig({ config, onChange, columns, hideLabels = fa
       </Section>
 
       {/* Data mapping */}
-      <Section title="Data Mapping">
+      <Section title="Datakobling">
         <SelectField
-          label="X-Axis (Categories)"
+          label="X-akse (kategorier)"
           value={config.xAxis}
           onChange={v => set("xAxis", v)}
           options={allColOptions}
-          placeholder="— Select column —"
+          placeholder="— Velg kolonne —"
         />
         <div className="space-y-1.5">
-          <Label className="text-xs text-muted-foreground">Y-Values (select one or more)</Label>
+          <Label className="text-xs text-muted-foreground">Y-verdier (velg én eller flere)</Label>
           <div className="space-y-1.5">
             {(config.yAxes || []).map((col, i) => (
               <div key={i} className="flex gap-1.5">
@@ -158,73 +158,73 @@ export default function ChartConfig({ config, onChange, columns, hideLabels = fa
               }}
               className="flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 transition-colors"
             >
-              <Plus className="w-3.5 h-3.5" /> Add Y-value
+              <Plus className="w-3.5 h-3.5" /> Legg til Y-verdi
             </button>
           </div>
           {columns.length === 0 && (
-            <p className="text-xs text-muted-foreground">No columns detected</p>
+            <p className="text-xs text-muted-foreground">Ingen kolonner oppdaget</p>
           )}
         </div>
         {config.chartType !== "pie" && config.chartType !== "scatter" && (
           <SelectField
-            label="Group by / Series (optional)"
+            label="Grupper etter / serier (valgfri)"
             value={config.groupBy}
             onChange={v => set("groupBy", v)}
-            options={[{ value: "none", label: "— None —" }, ...allColOptions]}
+            options={[{ value: "none", label: "— Ingen —" }, ...allColOptions]}
           />
         )}
       </Section>
 
       {/* Labels */}
       {!hideLabels && (
-        <Section title="Labels & Titles">
-          <TextField label="Chart title" value={config.title} onChange={v => set("title", v)} placeholder="My Chart" />
-          <TextField label="Subtitle" value={config.subtitle} onChange={v => set("subtitle", v)} placeholder="Optional subtitle" />
-          <TextField label="X-axis title" value={config.xAxisTitle} onChange={v => set("xAxisTitle", v)} placeholder="Categories" />
-          <TextField label="Y-axis title" value={config.yAxisTitle} onChange={v => set("yAxisTitle", v)} placeholder="Values" />
+        <Section title="Etiketter og titler">
+          <TextField label="Graftittel" value={config.title} onChange={v => set("title", v)} placeholder="Min graf" />
+          <TextField label="Undertittel" value={config.subtitle} onChange={v => set("subtitle", v)} placeholder="Valgfri undertittel" />
+          <TextField label="X-aksetittel" value={config.xAxisTitle} onChange={v => set("xAxisTitle", v)} placeholder="Kategorier" />
+          <TextField label="Y-aksetittel" value={config.yAxisTitle} onChange={v => set("yAxisTitle", v)} placeholder="Verdier" />
         </Section>
       )}
 
       {/* Number Format */}
-      <Section title="Number Format" defaultOpen={false}>
+      <Section title="Tallformat" defaultOpen={false}>
         <SelectField
-          label="Scale (display values as)"
+          label="Skala (vis verdier som)"
           value={config.numberScale || "none"}
           onChange={v => set("numberScale", v)}
           options={[
-            { value: "none", label: "No scaling (full number)" },
-            { value: "thousands", label: "Thousands (÷ 1 000)" },
-            { value: "millions", label: "Millions (÷ 1 000 000)" },
-            { value: "billions", label: "Billions (÷ 1 000 000 000)" },
+            { value: "none", label: "Ingen skalering (fullt tall)" },
+            { value: "thousands", label: "Tusener (÷ 1 000)" },
+            { value: "millions", label: "Millioner (÷ 1 000 000)" },
+            { value: "billions", label: "Milliarder (÷ 1 000 000 000)" },
           ]}
         />
         <SelectField
-          label="Thousands separator"
+          label="Tusenskilletegn"
           value={config.thousandsSep ?? "space"}
           onChange={v => set("thousandsSep", v)}
           options={[
-            { value: "none", label: "None (1000000)" },
-            { value: "space", label: "Space (1 000 000)" },
-            { value: "comma", label: "Comma (1,000,000)" },
-            { value: "dot", label: "Dot (1.000.000)" },
+            { value: "none", label: "Ingen (1000000)" },
+            { value: "space", label: "Mellomrom (1 000 000)" },
+            { value: "comma", label: "Komma (1,000,000)" },
+            { value: "dot", label: "Punktum (1.000.000)" },
           ]}
         />
         <SelectField
-          label="Decimal separator"
+          label="Desimalskilletegn"
           value={config.decimalPoint ?? "dot"}
           onChange={v => set("decimalPoint", v)}
           options={[
-            { value: "dot", label: "Dot (1.5)" },
-            { value: "comma", label: "Comma (1,5)" },
+            { value: "dot", label: "Punktum (1.5)" },
+            { value: "comma", label: "Komma (1,5)" },
           ]}
         />
         <div className="grid grid-cols-2 gap-2">
-          <TextField label="Prefix" value={config.prefix || ""} onChange={v => set("prefix", v)} placeholder="e.g. $, kr" />
-          <TextField label="Suffix" value={config.suffix || ""} onChange={v => set("suffix", v)} placeholder="e.g. %, NOK" />
+          <TextField label="Prefiks" value={config.prefix || ""} onChange={v => set("prefix", v)} placeholder="f.eks. kr, $" />
+          <TextField label="Suffiks" value={config.suffix || ""} onChange={v => set("suffix", v)} placeholder="f.eks. %, NOK" />
         </div>
         {/* Live preview */}
         <div className="px-3 py-2 rounded-lg bg-muted/50 text-xs text-muted-foreground">
-          Preview: <span className="font-mono font-semibold text-foreground">
+          Forhåndsvisning: <span className="font-mono font-semibold text-foreground">
             {(() => {
               const exampleRaw = 1234567.89;
               const scale = config.numberScale || "none";
@@ -243,21 +243,21 @@ export default function ChartConfig({ config, onChange, columns, hideLabels = fa
       </Section>
 
       {/* Display */}
-      <Section title="Display Options">
-        <SwitchField label="Data labels" value={config.dataLabels} onChange={v => set("dataLabels", v)} />
-        <SwitchField label="Legend" value={config.legend !== false} onChange={v => set("legend", v)} />
+      <Section title="Visningsalternativer">
+        <SwitchField label="Dataetiketter" value={config.dataLabels} onChange={v => set("dataLabels", v)} />
+        <SwitchField label="Tegnforklaring" value={config.legend !== false} onChange={v => set("legend", v)} />
         <SelectField
-          label="Sort data"
+          label="Sorter data"
           value={config.sortData || "none"}
           onChange={v => set("sortData", v)}
           options={[
-            { value: "none", label: "No sorting" },
-            { value: "asc", label: "Ascending" },
-            { value: "desc", label: "Descending" },
+            { value: "none", label: "Ingen sortering" },
+            { value: "asc", label: "Stigende" },
+            { value: "desc", label: "Synkende" },
           ]}
         />
         <TextField
-          label="Decimals"
+          label="Desimaler"
           value={config.decimals ?? ""}
           onChange={v => set("decimals", v === "" ? 0 : parseInt(v) || 0)}
           placeholder="0"
@@ -286,17 +286,17 @@ export default function ChartConfig({ config, onChange, columns, hideLabels = fa
       </Section>
 
       {/* Size */}
-      <Section title="Size" defaultOpen={false}>
+      <Section title="Størrelse" defaultOpen={false}>
         <div className="grid grid-cols-2 gap-2">
           <TextField
-            label="Width (px)"
+            label="Bredde (px)"
             value={config.width || ""}
             onChange={v => set("width", v ? parseInt(v) : null)}
             placeholder="Auto"
             type="number"
           />
           <TextField
-            label="Height (px)"
+            label="Høyde (px)"
             value={config.height || ""}
             onChange={v => set("height", v ? parseInt(v) : 400)}
             placeholder="400"
@@ -312,7 +312,7 @@ export default function ChartConfig({ config, onChange, columns, hideLabels = fa
       </Section>
 
       {/* Colors */}
-      <Section title="Colors" defaultOpen={false}>
+      <Section title="Farger" defaultOpen={false}>
         <div className="grid grid-cols-5 gap-2">
           {(config.colors || DEFAULT_COLORS).map((color, i) => (
             <div key={i} className="relative group">
@@ -342,7 +342,7 @@ export default function ChartConfig({ config, onChange, columns, hideLabels = fa
           onClick={() => set("colors", DEFAULT_COLORS)}
           className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2"
         >
-          Reset to defaults
+          Tilbakestill til standard
         </button>
       </Section>
     </div>
