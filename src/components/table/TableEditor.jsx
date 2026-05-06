@@ -7,6 +7,7 @@ export default function TableEditor({ data, columns, onDataChange, merges = [], 
   const [editValue, setEditValue] = useState("");
   const [selectedCells, setSelectedCells] = useState(new Set());
   const [selectionStart, setSelectionStart] = useState(null);
+  const [selectMode, setSelectMode] = useState(false);
 
   const startEdit = (rowIdx, colName) => {
     setEditCell({ rowIdx, colName });
@@ -45,33 +46,16 @@ export default function TableEditor({ data, columns, onDataChange, merges = [], 
     onDataChange(newData);
   };
 
-  const toggleCellSelection = (rowIdx, colIdx, e) => {
-    if (e.ctrlKey || e.metaKey) {
-      const cellKey = `${rowIdx}-${colIdx}`;
-      const newSelected = new Set(selectedCells);
-      if (newSelected.has(cellKey)) {
-        newSelected.delete(cellKey);
-      } else {
-        newSelected.add(cellKey);
-      }
-      setSelectedCells(newSelected);
-    } else if (e.shiftKey && selectionStart !== null) {
-      const [startRow, startCol] = selectionStart;
-      const newSelected = new Set();
-      const minRow = Math.min(startRow, rowIdx);
-      const maxRow = Math.max(startRow, rowIdx);
-      const minCol = Math.min(startCol, colIdx);
-      const maxCol = Math.max(startCol, colIdx);
-      for (let r = minRow; r <= maxRow; r++) {
-        for (let c = minCol; c <= maxCol; c++) {
-          newSelected.add(`${r}-${c}`);
-        }
-      }
-      setSelectedCells(newSelected);
+  const toggleCellSelection = (rowIdx, colIdx) => {
+    if (!selectMode) return;
+    const cellKey = `${rowIdx}-${colIdx}`;
+    const newSelected = new Set(selectedCells);
+    if (newSelected.has(cellKey)) {
+      newSelected.delete(cellKey);
     } else {
-      setSelectionStart([rowIdx, colIdx]);
-      setSelectedCells(new Set([`${rowIdx}-${colIdx}`]));
+      newSelected.add(cellKey);
     }
+    setSelectedCells(newSelected);
   };
 
   const mergeCells = () => {
@@ -115,22 +99,30 @@ export default function TableEditor({ data, columns, onDataChange, merges = [], 
   return (
     <div className="space-y-3">
       <div className="flex gap-2">
+        <Button 
+          size="sm" 
+          variant={selectMode ? "default" : "outline"} 
+          onClick={() => { setSelectMode(!selectMode); setSelectedCells(new Set()); }}
+          className="gap-1.5 text-xs h-8"
+        >
+          {selectMode ? "✓ Velgmodus aktiv" : "Velg celler"}
+        </Button>
         <Button size="sm" variant="outline" onClick={addRow} className="gap-1.5 text-xs h-8">
           <Plus className="w-3.5 h-3.5" />Legg til rad
         </Button>
         <Button size="sm" variant="outline" onClick={addColumn} className="gap-1.5 text-xs h-8">
           <Plus className="w-3.5 h-3.5" />Legg til kolonne
         </Button>
-        {selectedCells.size > 1 && (
+        {selectMode && selectedCells.size > 1 && (
           <Button size="sm" onClick={mergeCells} className="gap-1.5 text-xs h-8 bg-primary">
             <Copy className="w-3.5 h-3.5" />Slå sammen {selectedCells.size} celler
           </Button>
         )}
       </div>
 
-      {selectedCells.size > 0 && (
+      {selectMode && selectedCells.size > 0 && (
         <p className="text-xs text-muted-foreground">
-          {selectedCells.size} celle(r) valgt • Bruk Ctrl/Cmd+klikk for flere, Shift+klikk for område
+          {selectedCells.size} celle(r) valgt • Klikk på celler for å velge/velge bort
         </p>
       )}
 
@@ -197,10 +189,10 @@ export default function TableEditor({ data, columns, onDataChange, merges = [], 
                   return (
                     <td
                       key={col.name}
-                      className={`px-2 py-1 border-l border-border/30 cursor-pointer ${isSelected ? 'bg-primary/20' : ''}`}
+                      className={`px-2 py-1 border-l border-border/30 ${selectMode ? 'cursor-pointer' : 'cursor-text'} ${isSelected ? 'bg-primary/20' : ''}`}
                       rowSpan={mergeSpan?.rowSpan}
                       colSpan={mergeSpan?.colSpan}
-                      onClick={(e) => toggleCellSelection(rowIdx, colIdx, e)}
+                      onClick={() => toggleCellSelection(rowIdx, colIdx)}
                     >
                       {isEditing ? (
                         <div className="flex gap-1">
