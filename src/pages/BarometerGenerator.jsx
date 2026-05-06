@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import BarometerUploader from "@/components/barometer/BarometerUploader";
 import BarometerConfig from "@/components/barometer/BarometerConfig";
 import BarometerChart from "@/components/barometer/BarometerChart";
+import DataTable from "@/components/chart/DataTable";
 import { buildBarometerConfig } from "@/lib/barometerUtils";
 import { base44 } from "@/api/base44Client";
 
@@ -202,6 +203,7 @@ export default function BarometerGenerator() {
               <Upload className="w-3.5 h-3.5" /> Last opp data
             </h2>
             <BarometerUploader onDataLoaded={handleDataLoaded} />
+            {data && <DataTable data={data} columns={columns} />}
           </div>
 
           {data && (
