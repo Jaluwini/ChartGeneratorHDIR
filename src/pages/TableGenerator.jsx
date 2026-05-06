@@ -44,6 +44,7 @@ const DEFAULT_CONFIG = {
   cfMidColor: "#fef9c3",
   cfLowColor: "#fee2e2",
   footnotes: [],
+  merges: [],
 };
 
 export default function TableGenerator() {
@@ -236,7 +237,13 @@ export default function TableGenerator() {
                   className="bg-card rounded-2xl border border-border p-4 shadow-sm"
                 >
                   <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Rediger tabelldata</h2>
-                  <TableEditor data={data} columns={columns} onDataChange={setData} />
+                  <TableEditor 
+                    data={data} 
+                    columns={columns} 
+                    onDataChange={setData}
+                    merges={config.merges || []}
+                    onMergesChange={(merges) => setConfig(prev => ({ ...prev, merges }))}
+                  />
                 </motion.div>
               )}
 

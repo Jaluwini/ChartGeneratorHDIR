@@ -2,10 +2,9 @@ import { useState } from "react";
 import { Plus, Trash2, X, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export default function TableEditor({ data, columns, onDataChange }) {
+export default function TableEditor({ data, columns, onDataChange, merges = [], onMergesChange }) {
   const [editCell, setEditCell] = useState(null);
   const [editValue, setEditValue] = useState("");
-  const [merges, setMerges] = useState([]);
   const [selectedCells, setSelectedCells] = useState(new Set());
   const [selectionStart, setSelectionStart] = useState(null);
 
@@ -87,9 +86,13 @@ export default function TableEditor({ data, columns, onDataChange }) {
     const maxCol = Math.max(...cells.map(c => c[1]));
     const mergeKey = `${minRow}-${minCol}-${maxRow}-${maxCol}`;
     if (!merges.some(m => m === mergeKey)) {
-      setMerges([...merges, mergeKey]);
+      onMergesChange([...merges, mergeKey]);
     }
     setSelectedCells(new Set());
+  };
+
+  const unmergeCells = (mergeKey) => {
+    onMergesChange(merges.filter(m => m !== mergeKey));
   };
 
   const isCellMerged = (rowIdx, colIdx) => {
@@ -129,6 +132,23 @@ export default function TableEditor({ data, columns, onDataChange }) {
         <p className="text-xs text-muted-foreground">
           {selectedCells.size} celle(r) valgt • Bruk Ctrl/Cmd+klikk for flere, Shift+klikk for område
         </p>
+      )}
+
+      {merges.length > 0 && (
+        <div className="text-xs space-y-1 p-2 rounded-lg bg-muted/30">
+          <p className="font-medium text-muted-foreground">Sammensatte celler:</p>
+          {merges.map((merge, idx) => (
+            <div key={idx} className="flex items-center justify-between gap-2 px-2 py-1 rounded bg-muted/50 hover:bg-muted/70">
+              <span className="text-muted-foreground">{merge}</span>
+              <button
+                onClick={() => unmergeCells(merge)}
+                className="text-xs text-destructive hover:bg-destructive/20 px-2 py-0.5 rounded transition-colors"
+              >
+                Avslå
+              </button>
+            </div>
+          ))}
+        </div>
       )}
 
       <div className="overflow-x-auto border border-border rounded-lg">

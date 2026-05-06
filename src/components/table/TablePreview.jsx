@@ -10,7 +10,7 @@ function getCfColor(value, config) {
   return config.cfMidColor || "#fef9c3";
 }
 
-export default function TablePreview({ data, columns, config }) {
+export default function TablePreview({ data, columns, config = {} }) {
   const [sortCol, setSortCol] = useState(null);
   const [sortDir, setSortDir] = useState("asc");
   const [search, setSearch] = useState("");
@@ -75,6 +75,24 @@ export default function TablePreview({ data, columns, config }) {
 
   const cellPadding = config.compact ? "px-3 py-1.5" : "px-4 py-2.5";
   const fontSizeClass = `text-${fontSize}`;
+  const merges = config.merges || [];
+
+  const isCellMerged = (rowIdx, colIdx) => {
+    return merges.some(merge => {
+      const [mr1, mc1, mr2, mc2] = merge.split('-').map(Number);
+      return rowIdx >= mr1 && rowIdx <= mr2 && colIdx >= mc1 && colIdx <= mc2 && !(rowIdx === mr1 && colIdx === mc1);
+    });
+  };
+
+  const getCellMergeSpan = (rowIdx, colIdx) => {
+    for (const merge of merges) {
+      const [mr1, mc1, mr2, mc2] = merge.split('-').map(Number);
+      if (rowIdx === mr1 && colIdx === mc1) {
+        return { rowSpan: mr2 - mr1 + 1, colSpan: mc2 - mc1 + 1 };
+      }
+    }
+    return null;
+  };
 
   return (
     <div className="w-full flex flex-col" style={{ background: tableBg }}>
@@ -148,16 +166,22 @@ export default function TablePreview({ data, columns, config }) {
                   {config.showRowNumbers && (
                     <td className={`${cellPadding} text-muted-foreground`} style={{ borderColor, textAlign }}>{globalIdx + 1}</td>
                   )}
-                  {visibleCols.map(col => {
+                  {visibleCols.map((col, colIdx) => {
+                    if (isCellMerged(i, colIdx)) return null;
+                    
                     const val = row[col.name];
                     const isNum = col.type === "number";
                     const cfColor = config.conditionalFormat && config.cfColumn === col.name
                       ? getCfColor(val, config)
                       : null;
+                    const mergeSpan = getCellMergeSpan(i, colIdx);
+                    
                     return (
                       <td
                         key={col.name}
                         className={`${cellPadding} ${!config.nowrap ? "whitespace-nowrap" : ""}`}
+                        rowSpan={mergeSpan?.rowSpan}
+                        colSpan={mergeSpan?.colSpan}
                         style={{
                           textAlign,
                           color: isNum && config.highlightNumbers ? numberColor : undefined,
