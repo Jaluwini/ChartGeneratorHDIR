@@ -222,6 +222,36 @@ Deno.serve(async (req) => {
     if (!chart) return Response.json({ error: "Graf ikke funnet" }, { status: 404 });
     if (!chart.exposed_in_api) return Response.json({ error: "Denne grafen er ikke eksponert i API" }, { status: 403 });
 
+    // Handle table type: return structured JSON data
+    if (chart.chart_type === "table") {
+      const cfg = chart.chart_config || {};
+      const rawData = cfg._rawData || [];
+      const rawColumns = cfg._columns || [];
+      const visibleCols = cfg.visibleColumns
+        ? rawColumns.filter(c => cfg.visibleColumns.includes(c.name))
+        : rawColumns;
+      const aliases = cfg.columnAliases || {};
+      const rows = rawData.map(row => {
+        const obj = {};
+        visibleCols.forEach(col => {
+          const key = aliases[col.name] ?? col.name;
+          obj[key] = row[col.name] ?? null;
+        });
+        return obj;
+      });
+      return Response.json({
+        type: "table",
+        meta: {
+          title: cfg.title || chart.title || "",
+          subtitle: cfg.subtitle || "",
+          source: cfg.sourceText || "",
+          columns: visibleCols.map(c => ({ key: aliases[c.name] ?? c.name, type: c.type })),
+          total_rows: rows.length,
+        },
+        data: rows,
+      });
+    }
+
     let hc_config = chart.hc_config;
 
     // If this chart was built from Helsedirektoratet API, rebuild hc_config from fresh data
