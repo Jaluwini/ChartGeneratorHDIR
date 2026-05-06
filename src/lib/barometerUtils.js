@@ -190,16 +190,17 @@ export function buildBarometerConfig(config, data) {
         color: bandColors[i % 2],
         label: {
           text: t.theme,
-          align: "right",
+          align: "left",
           verticalAlign: "middle",
-          x: 130,
+          x: 6,
+          rotation: 270,
           style: {
-            fontSize: "9px",
+            fontSize: "8px",
             fontWeight: "700",
-            color: "#6b7280",
+            color: "#9ca3af",
             textTransform: "uppercase",
-            letterSpacing: "0.06em",
-            whiteSpace: "nowrap",
+            letterSpacing: "0.08em",
+            textOverflow: "ellipsis",
           },
         },
         zIndex: 1,
@@ -232,8 +233,7 @@ export function buildBarometerConfig(config, data) {
     });
   }
 
-  const hasThemes = themeSegments.length > 0;
-  const marginRight = hasThemes ? 140 : 60;
+  const marginRight = 60;
 
   const dec = decimals ?? 1;
 
