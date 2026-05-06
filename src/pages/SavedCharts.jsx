@@ -238,7 +238,7 @@ export default function SavedCharts() {
             <Maximize2 className="w-4 h-4" />
           </Button>
           <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary"
-            onClick={() => { window.location.href = `/?load=${chart.id}`; }} title="Åpne og rediger">
+            onClick={() => { window.location.href = chart.chart_type === "barometer" ? `/barometer?load=${chart.id}` : `/?load=${chart.id}`; }} title="Åpne og rediger">
             <Pencil className="w-4 h-4" />
           </Button>
           <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive"
