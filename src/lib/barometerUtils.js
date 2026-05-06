@@ -184,25 +184,11 @@ export function buildBarometerConfig(config, data) {
     const bandColors = ["#f8f9fa", "#ffffff"];
     themes.forEach((t, i) => {
       themeSegments.push(t);
+      // No label here — labels are drawn via renderer in BarometerChart for full control
       xPlotBands.push({
         from: t.from,
         to: t.to,
         color: bandColors[i % 2],
-        label: {
-          text: t.theme,
-          align: "left",
-          verticalAlign: "middle",
-          x: 6,
-          rotation: 270,
-          style: {
-            fontSize: "8px",
-            fontWeight: "700",
-            color: "#9ca3af",
-            textTransform: "uppercase",
-            letterSpacing: "0.08em",
-            textOverflow: "ellipsis",
-          },
-        },
         zIndex: 1,
       });
     });
@@ -233,7 +219,8 @@ export function buildBarometerConfig(config, data) {
     });
   }
 
-  const marginRight = 60;
+  const hasThemes = themeSegments.length > 0;
+  const marginRight = hasThemes ? 100 : 60;
 
   const dec = decimals ?? 1;
 
@@ -328,5 +315,8 @@ export function buildBarometerConfig(config, data) {
     series: [...rangeSeries, ...refDotSeries, ...diamondSeries],
     credits: { enabled: false },
     exporting: { enabled: false },
+    // Custom metadata for renderer-drawn theme labels
+    _themeSegments: themeSegments,
+    _rowCount: rows.length,
   };
 }
