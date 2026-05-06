@@ -168,32 +168,46 @@ export default function ApiDataImporter({ onDataLoaded, onIndicatorSelected }) {
         </FullscreenModal>
       )}
 
-      <div className="flex items-center justify-between">
-        <p className="text-xs text-muted-foreground">
-          Velg en kvalitetsindikator fra Helsedirektoratet:
-        </p>
-        <button
-          onClick={() => setFullscreen(true)}
-          className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
-          title="Fullskjerm"
-        >
-          <Maximize2 className="w-3.5 h-3.5" />
-        </button>
-      </div>
-
-      {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
-        <input
-          type="text"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          placeholder="Søk etter indikator…"
-          className="w-full pl-8 pr-3 h-8 rounded-lg border border-input bg-background text-xs text-foreground outline-none focus:ring-2 focus:ring-ring/50 transition-all"
-        />
-      </div>
-
-      <IndicatorList />
+      {selected && !loadingData ? (
+        /* Compact selected state */
+        <div className="flex items-start gap-2 px-3 py-2.5 rounded-lg border border-primary/30 bg-primary/5">
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-semibold mb-0.5">Valgt indikator</p>
+            <p className="text-xs font-medium text-foreground leading-snug">{selected.tittel}</p>
+          </div>
+          <button
+            onClick={() => setFullscreen(true)}
+            className="text-[11px] text-primary hover:text-primary/80 underline underline-offset-2 whitespace-nowrap flex-shrink-0 mt-0.5"
+          >
+            Bytt
+          </button>
+        </div>
+      ) : !selected ? (
+        /* Picker: search + list */
+        <>
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-muted-foreground">Velg en kvalitetsindikator fra Helsedirektoratet:</p>
+            <button
+              onClick={() => setFullscreen(true)}
+              className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+              title="Fullskjerm"
+            >
+              <Maximize2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+            <input
+              type="text"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Søk etter indikator…"
+              className="w-full pl-8 pr-3 h-8 rounded-lg border border-input bg-background text-xs text-foreground outline-none focus:ring-2 focus:ring-ring/50 transition-all"
+            />
+          </div>
+          <IndicatorList />
+        </>
+      ) : null}
 
       {/* Filter options */}
       {filterOptions && !loadingData && (
