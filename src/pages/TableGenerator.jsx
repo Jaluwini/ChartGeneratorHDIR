@@ -115,6 +115,7 @@ export default function TableGenerator() {
 
   const [fullscreen, setFullscreen] = useState(false);
   const [showEditor, setShowEditor] = useState(false);
+  const [editorFullscreen, setEditorFullscreen] = useState(false);
 
   const createEmptyTable = () => {
     const newColumns = [
@@ -230,13 +231,22 @@ export default function TableGenerator() {
                 {showEditor ? "Lukk redigering" : "Rediger data"}
               </Button>
 
-              {showEditor && (
+              {showEditor && !editorFullscreen && (
                 <motion.div
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   className="bg-card rounded-2xl border border-border p-4 shadow-sm"
                 >
-                  <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Rediger tabelldata</h2>
+                  <div className="flex items-center justify-between mb-3">
+                    <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Rediger tabelldata</h2>
+                    <button
+                      onClick={() => setEditorFullscreen(true)}
+                      className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                      title="Fullskjerm"
+                    >
+                      <Maximize2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                   <TableEditor 
                     data={data} 
                     columns={columns} 
@@ -245,6 +255,31 @@ export default function TableGenerator() {
                     onMergesChange={(merges) => setConfig(prev => ({ ...prev, merges }))}
                   />
                 </motion.div>
+              )}
+
+              {editorFullscreen && (
+                <div className="fixed inset-0 z-50 bg-background flex flex-col overflow-auto">
+                  <div className="flex items-center justify-between px-6 py-3 border-b border-border bg-card sticky top-0">
+                    <span className="font-semibold text-sm text-foreground">Rediger tabelldata</span>
+                    <button
+                      onClick={() => setEditorFullscreen(false)}
+                      className="p-1.5 rounded-lg hover:bg-muted transition-colors"
+                    >
+                      <X className="w-4 h-4 text-muted-foreground" />
+                    </button>
+                  </div>
+                  <div className="flex-1 overflow-auto p-6">
+                    <div className="max-w-[1400px] mx-auto">
+                      <TableEditor 
+                        data={data} 
+                        columns={columns} 
+                        onDataChange={setData}
+                        merges={config.merges || []}
+                        onMergesChange={(merges) => setConfig(prev => ({ ...prev, merges }))}
+                      />
+                    </div>
+                  </div>
+                </div>
               )}
 
               <motion.div
