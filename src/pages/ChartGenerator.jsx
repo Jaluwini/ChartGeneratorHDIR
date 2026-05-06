@@ -8,7 +8,7 @@ import ExportPanel from "@/components/chart/ExportPanel";
 import ApiDataImporter from "@/components/chart/ApiDataImporter";
 import ApiFieldPicker from "@/components/chart/ApiFieldPicker";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, BarChart3, Eye, Code2, AlertCircle, Save, BookMarked, Activity } from "lucide-react";
+import { RefreshCw, BarChart3, Eye, Code2, AlertCircle, Save, BookMarked, ArrowLeft } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
@@ -196,12 +196,6 @@ export default function ChartGenerator() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Link to="/barometer">
-              <Button variant="ghost" size="sm" className="gap-1.5 text-xs h-8 text-muted-foreground hover:text-foreground">
-                <Activity className="w-3.5 h-3.5" />
-                Barometer
-              </Button>
-            </Link>
             <Link to="/saved">
               <Button variant="ghost" size="sm" className="gap-1.5 text-xs h-8 text-muted-foreground hover:text-foreground">
                 <BookMarked className="w-3.5 h-3.5" />
@@ -226,10 +220,14 @@ export default function ChartGenerator() {
               size="sm"
               onClick={handleReset}
               className="gap-1.5 text-xs h-8 text-muted-foreground hover:text-foreground">
-              
               <RefreshCw className="w-3.5 h-3.5" />
               Reset
             </Button>
+            <Link to="/">
+              <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8">
+                <ArrowLeft className="w-3.5 h-3.5" />Ny statistikkvisning
+              </Button>
+            </Link>
           </div>
         </div>
       </header>
