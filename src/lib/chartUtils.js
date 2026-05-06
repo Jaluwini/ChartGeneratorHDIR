@@ -264,7 +264,7 @@ export function buildHighchartsConfig(config, data) {
   const hcConfig = {
     _appConfig: config,
     chart: {
-      type: actualType,
+      type: isLineColumn ? undefined : actualType,
       height: height || 400,
       width: width || null
     },
