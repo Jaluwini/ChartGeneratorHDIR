@@ -8,6 +8,7 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import ChartGenerator from './pages/ChartGenerator';
 import SavedCharts from './pages/SavedCharts';
 import ApiSettings from './pages/ApiSettings';
+import BarometerGenerator from './pages/BarometerGenerator';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -34,6 +35,7 @@ const AuthenticatedApp = () => {
       <Route path="/" element={<ChartGenerator />} />
       <Route path="/saved" element={<SavedCharts />} />
       <Route path="/api-settings" element={<ApiSettings />} />
+      <Route path="/barometer" element={<BarometerGenerator />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
