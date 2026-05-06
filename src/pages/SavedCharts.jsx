@@ -218,6 +218,14 @@ export default function SavedCharts() {
             <span className="text-[11px] text-green-700 font-medium">API</span>
           </div>
         )}
+        {chart.api_source && (
+          <div
+            className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-500/10 border border-blue-500/20 cursor-default"
+            title="Data hentes direkte fra API ved visning"
+          >
+            <span className="text-[11px] text-blue-600 font-medium">Dynamisk</span>
+          </div>
+        )}
         {chart.folder
           ? <FolderBadge folder={chart.folder} onEdit={() => setEditingFolderFor(chart.id)} />
           : (
