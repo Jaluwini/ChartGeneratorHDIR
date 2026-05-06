@@ -15,7 +15,6 @@ function getDiamondColor(value, reference, config) {
     if (bad) return config.colorBad || "#ef4444";
     return config.colorNeutral || "#f59e0b";
   }
-  // default: relative %
   if (reference === null || reference === 0) return config.colorMissing || "#ffffff";
   const pctDiff = ((value - reference) / Math.abs(reference)) * 100;
   const effectiveDiff = config.higherIsBetter !== false ? pctDiff : -pctDiff;
@@ -30,8 +29,7 @@ export function buildBarometerConfig(config, data) {
   const {
     colIndicator, colValue, colReference, colMin, colMax,
     colUnit, colPeriod, colTheme, colColor,
-    colorMode, higherIsBetter,
-    thresholdGood, thresholdBad,
+    colorMode,
     colorGood, colorNeutral, colorBad, colorMissing,
     barColor, referenceLineColor, diamondSize,
     title, subtitle, decimals, valueSuffix,
@@ -41,6 +39,7 @@ export function buildBarometerConfig(config, data) {
 
   if (!data || data.length === 0 || !colIndicator || !colValue) return null;
 
+  // Process rows — keep original order, first row = top of chart
   const rows = data.map((row, i) => {
     const value = clean(row[colValue]);
     const reference = colReference ? clean(row[colReference]) : null;
@@ -65,22 +64,26 @@ export function buildBarometerConfig(config, data) {
     return { indicatorLabel, value, reference, minVal, maxVal, unit, period, theme, color, rowIndex: i };
   });
 
-  // Build categories (reversed so first row is at top)
-  const categories = rows.map(r => r.indicatorLabel).reverse();
-  const reversed = [...rows].reverse();
+  // With inverted chart: xAxis is vertical (categories), yAxis is horizontal (values).
+  // Categories on xAxis: first row at top means index 0 at top → use reversed: false on xAxis
+  // We map row index directly: row 0 = xAxis category 0 = top
+  const categories = rows.map(r => r.indicatorLabel);
+
+  // Determine value axis (yAxis) range
+  const allValues = rows.flatMap(r => [r.value, r.minVal, r.maxVal, r.reference].filter(v => v !== null));
+  const yMin = allValues.length > 0 ? Math.min(...allValues) : 0;
+  const yMax = allValues.length > 0 ? Math.max(...allValues) : 100;
+  const yPad = (yMax - yMin) * 0.1;
 
   // Series 1: gray variation bars (columnrange)
-  const hasRangeData = reversed.some(r => r.minVal !== null && r.maxVal !== null);
+  // columnrange uses x=category index, low/high=value range
+  const hasRangeData = rows.some(r => r.minVal !== null && r.maxVal !== null);
   const rangeSeries = hasRangeData && showReferenceBar !== false ? [{
     name: "Variasjon mellom fylkene",
     type: "columnrange",
-    data: reversed.map(r => {
+    data: rows.map((r, xi) => {
       if (r.minVal === null || r.maxVal === null) return null;
-      return {
-        low: r.minVal,
-        high: r.maxVal,
-        color: barColor || "#cccccc",
-      };
+      return { x: xi, low: r.minVal, high: r.maxVal, color: barColor || "#cccccc" };
     }),
     color: barColor || "#cccccc",
     groupPadding: 0,
@@ -91,18 +94,25 @@ export function buildBarometerConfig(config, data) {
     legendSymbol: "rectangle",
   }] : [];
 
-  // Series 2: national reference dots (if no min/max but reference column exists)
+  // Series 2: national reference diamonds (when no range bars)
   const refDotSeries = (!hasRangeData && colReference) ? [{
     name: "Nasjonalt gjennomsnitt",
     type: "scatter",
-    data: reversed.map(r => r.reference !== null ? { x: r.reference, y: 0 } : null),
-    marker: { symbol: "diamond", radius: (diamondSize || 8) * 0.8, lineWidth: 1.5, lineColor: "#555", fillColor: "#fff" },
+    data: rows.map((r, xi) =>
+      r.reference !== null ? { x: xi, y: r.reference } : null
+    ),
+    marker: {
+      symbol: "diamond",
+      radius: (diamondSize || 8) * 0.8,
+      lineWidth: 1.5,
+      lineColor: "#555",
+      fillColor: "#fff",
+    },
     showInLegend: true,
     enableMouseTracking: false,
   }] : [];
 
-  // Series 3: main value diamonds (scatter)
-  // Group by color so we can have separate legend entries
+  // Series 3: main value diamonds grouped by color for legend
   const colorGroups = {
     [colorGood || "#22c55e"]: { name: "Bedre enn referanse", color: colorGood || "#22c55e", data: [] },
     [colorNeutral || "#f59e0b"]: { name: "På nivå med referanse", color: colorNeutral || "#f59e0b", data: [] },
@@ -110,28 +120,19 @@ export function buildBarometerConfig(config, data) {
     [colorMissing || "#ffffff"]: { name: "Manglende data", color: colorMissing || "#ffffff", data: [] },
   };
 
-  reversed.forEach((r, yi) => {
-    if (r.value === null) {
-      colorGroups[colorMissing || "#ffffff"].data.push({
-        x: null, y: yi,
-        tooltipData: r,
-      });
-      return;
+  rows.forEach((r, xi) => {
+    const grp = colorGroups[r.color] || colorGroups[colorNeutral || "#f59e0b"];
+    if (r.value !== null) {
+      grp.data.push({ x: xi, y: r.value, tooltipData: r });
     }
-    const grp = colorGroups[r.color] || colorGroups[colorGood || "#22c55e"];
-    grp.data.push({ x: r.value, y: yi, tooltipData: r });
   });
 
   const diamondSeries = Object.values(colorGroups)
-    .filter(g => g.data.some(d => d.x !== null))
+    .filter(g => g.data.length > 0)
     .map(g => ({
       name: g.name,
       type: "scatter",
-      data: g.data.map(d => d.x !== null ? {
-        x: d.x,
-        y: d.y,
-        tooltipData: d.tooltipData,
-      } : null),
+      data: g.data,
       color: g.color,
       marker: {
         symbol: "diamond",
@@ -144,13 +145,13 @@ export function buildBarometerConfig(config, data) {
       zIndex: 5,
     }));
 
-  // Build theme band plotBands on yAxis
-  const plotBands = [];
+  // Theme plotBands on xAxis (vertical axis after inversion)
+  const xPlotBands = [];
   if (colTheme) {
     const themes = [];
     let currentTheme = null;
     let startIdx = 0;
-    reversed.forEach((r, i) => {
+    rows.forEach((r, i) => {
       if (r.theme !== currentTheme) {
         if (currentTheme !== null) {
           themes.push({ theme: currentTheme, from: startIdx - 0.5, to: i - 0.5 });
@@ -160,11 +161,11 @@ export function buildBarometerConfig(config, data) {
       }
     });
     if (currentTheme !== null) {
-      themes.push({ theme: currentTheme, from: startIdx - 0.5, to: reversed.length - 0.5 });
+      themes.push({ theme: currentTheme, from: startIdx - 0.5, to: rows.length - 0.5 });
     }
     const bandColors = ["#f8f9fa", "#ffffff"];
     themes.forEach((t, i) => {
-      plotBands.push({
+      xPlotBands.push({
         from: t.from,
         to: t.to,
         color: bandColors[i % 2],
@@ -180,25 +181,23 @@ export function buildBarometerConfig(config, data) {
     });
   }
 
-  // Build plotLines (reference value per row OR fixed global line)
-  const xPlotLines = [];
+  // Reference plotLine on yAxis (horizontal value axis)
+  const yPlotLines = [];
   if (referenceLineFixed !== null && referenceLineFixed !== undefined && referenceLineFixed !== "") {
-    xPlotLines.push({
+    yPlotLines.push({
       value: parseFloat(referenceLineFixed),
       color: referenceLineColor || "#cc0000",
       width: 2,
       zIndex: 4,
-      label: { text: "Ref.", align: "left", style: { color: referenceLineColor || "#cc0000", fontSize: "10px" } }
+      label: {
+        text: "Ref.",
+        align: "left",
+        style: { color: referenceLineColor || "#cc0000", fontSize: "10px" },
+      },
     });
   }
 
-  // Determine x-axis range
-  const allXValues = rows.flatMap(r => [r.value, r.minVal, r.maxVal, r.reference].filter(v => v !== null));
-  const xMin = allXValues.length > 0 ? Math.min(...allXValues) : 0;
-  const xMax = allXValues.length > 0 ? Math.max(...allXValues) : 100;
-  const xPad = (xMax - xMin) * 0.1;
-
-  const hcConfig = {
+  return {
     chart: {
       type: "scatter",
       inverted: true,
@@ -209,27 +208,13 @@ export function buildBarometerConfig(config, data) {
     },
     title: { text: title || "", style: { fontSize: "15px", fontWeight: "600" } },
     subtitle: { text: subtitle || "" },
+    // xAxis = vertical after inversion → shows indicator categories
     xAxis: {
-      min: xMin - xPad,
-      max: xMax + xPad,
-      gridLineWidth: 1,
-      gridLineColor: "#e5e7eb",
-      plotLines: xPlotLines,
-      labels: {
-        formatter: function() {
-          return this.value.toFixed(decimals ?? 1) + (valueSuffix ? ` ${valueSuffix}` : "");
-        },
-        style: { fontSize: "10px" }
-      },
-      title: { text: "" },
-      tickLength: 0,
-    },
-    yAxis: {
       categories,
       title: { text: "" },
       gridLineWidth: 1,
       gridLineColor: "#e5e7eb",
-      plotBands,
+      plotBands: xPlotBands,
       labels: {
         style: { fontSize: "11px", color: "#374151" },
         align: "right",
@@ -237,6 +222,22 @@ export function buildBarometerConfig(config, data) {
       lineWidth: 0,
       tickLength: 0,
       reversed: false,
+    },
+    // yAxis = horizontal after inversion → shows numeric values
+    yAxis: {
+      min: yMin - yPad,
+      max: yMax + yPad,
+      title: { text: "" },
+      gridLineWidth: 1,
+      gridLineColor: "#e5e7eb",
+      plotLines: yPlotLines,
+      labels: {
+        formatter: function () {
+          return this.value.toFixed(decimals ?? 1) + (valueSuffix ? ` ${valueSuffix}` : "");
+        },
+        style: { fontSize: "10px" },
+      },
+      tickLength: 0,
     },
     legend: {
       enabled: true,
@@ -249,9 +250,8 @@ export function buildBarometerConfig(config, data) {
     },
     tooltip: {
       useHTML: true,
-      formatter: function() {
-        const pt = this.point;
-        const td = pt.tooltipData;
+      formatter: function () {
+        const td = this.point.tooltipData;
         if (!td) return `<b>${this.series.name}</b>`;
         const dec = decimals ?? 1;
         const suf = td.unit || valueSuffix || "";
@@ -264,12 +264,11 @@ export function buildBarometerConfig(config, data) {
         if (td.unit) html += `<div style="color:#888;font-size:10px;">Enhet: ${td.unit}</div>`;
         html += `</div>`;
         return html;
-      }
+      },
     },
     plotOptions: {
       series: { animation: { duration: 300 } },
       columnrange: {
-        inverted: true,
         grouping: false,
         groupPadding: 0,
         pointPadding: 0.25,
@@ -278,13 +277,11 @@ export function buildBarometerConfig(config, data) {
       },
       scatter: {
         jitter: { x: 0, y: 0 },
-        states: { hover: { enabled: true } }
-      }
+        states: { hover: { enabled: true } },
+      },
     },
     series: [...rangeSeries, ...refDotSeries, ...diamondSeries],
     credits: { enabled: false },
     exporting: { enabled: false },
   };
-
-  return hcConfig;
 }
