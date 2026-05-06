@@ -106,11 +106,13 @@ export default function FileUploader({ onDataLoaded }) {
               const xAxisField = parsed.xAxis?.title?.text || Object.keys(rows[0])?.[0] || "x";
               const yAxesFields = parsed.series.map(s => s.name || "y");
               
+              const titleText = parsed.title?.text;
+              const subtitleText = parsed.subtitle?.text;
               chartConfig = {
                 xAxis: xAxisField,
                 yAxes: yAxesFields,
-                title: parsed.title?.text || "",
-                subtitle: parsed.subtitle?.text || "",
+                title: typeof titleText === "string" ? titleText : "",
+                subtitle: typeof subtitleText === "string" ? subtitleText : "",
                 xAxisTitle: parsed.xAxis?.title?.text || "",
                 yAxisTitle: parsed.yAxis?.title?.text || "",
                 chartType: parsed.chart?.type || "line",
