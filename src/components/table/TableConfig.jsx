@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronDown, ChevronUp, GripVertical } from "lucide-react";
+import { ChevronDown, ChevronUp, GripVertical, Trash2 as Trash2Icon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -194,6 +194,44 @@ export default function TableConfig({ config, onChange, columns }) {
         <ColorInput label="Kantlinjefarge" value={config.borderColor} onChange={v => set("borderColor", v)} defaultVal="#e5e7eb" />
         <ColorInput label="Tabellbakgrunn" value={config.tableBg} onChange={v => set("tableBg", v)} defaultVal="#ffffff" />
         <ColorInput label="Tallfarge (uthevet)" value={config.numberColor} onChange={v => set("numberColor", v)} defaultVal="#2563eb" />
+      </Section>
+
+      {/* Fotnoter og kilder */}
+      <Section title="Fotnoter og kilder" defaultOpen={false}>
+        <p className="text-[11px] text-muted-foreground mb-2">Legg til fotnoter som vises under tabellen.</p>
+        <div className="space-y-2 max-h-48 overflow-y-auto">
+          {(config.footnotes || []).map((note, idx) => (
+            <div key={idx} className="flex gap-2 items-start p-2 rounded-lg bg-muted/30 group">
+              <span className="text-xs font-mono text-muted-foreground flex-shrink-0 mt-0.5">{idx + 1}.</span>
+              <input
+                type="text"
+                value={note}
+                onChange={(e) => {
+                  const newNotes = [...(config.footnotes || [])];
+                  newNotes[idx] = e.target.value;
+                  set("footnotes", newNotes);
+                }}
+                className="flex-1 text-xs px-2 py-1 rounded border border-transparent hover:border-border focus:border-ring bg-transparent focus:bg-background outline-none"
+                placeholder="Skriv fotnote..."
+              />
+              <button
+                onClick={() => {
+                  const newNotes = (config.footnotes || []).filter((_, i) => i !== idx);
+                  set("footnotes", newNotes);
+                }}
+                className="opacity-0 group-hover:opacity-100 p-1 hover:bg-destructive/20 rounded transition-all text-destructive flex-shrink-0"
+              >
+                <Trash2Icon className="w-3 h-3" />
+              </button>
+            </div>
+          ))}
+        </div>
+        <button
+          onClick={() => set("footnotes", [...(config.footnotes || []), ""])}
+          className="w-full mt-2 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/10 rounded-lg border border-primary/30 transition-colors"
+        >
+          + Legg til fotnote
+        </button>
       </Section>
 
       {/* Betinget formatering */}

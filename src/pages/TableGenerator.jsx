@@ -43,6 +43,7 @@ const DEFAULT_CONFIG = {
   cfHighColor: "#dcfce7",
   cfMidColor: "#fef9c3",
   cfLowColor: "#fee2e2",
+  footnotes: [],
 };
 
 export default function TableGenerator() {

@@ -195,6 +195,17 @@ export default function TablePreview({ data, columns, config }) {
         )}
         {config.sourceText && <span className="text-[10px] italic">Kilde: {config.sourceText}</span>}
       </div>
+
+      {/* Footnotes */}
+      {config.footnotes && config.footnotes.length > 0 && (
+        <div className="px-4 py-3 border-t space-y-1.5" style={{ borderColor, background: `${tableBg}e8` }}>
+          {config.footnotes.map((note, idx) => (
+            <div key={idx} className="text-xs text-muted-foreground">
+              <span className="font-mono">{idx + 1}.</span> {note}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
