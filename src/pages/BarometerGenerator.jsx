@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { BarChart3, BookMarked, Upload, RefreshCw, Save, Download, Info } from "lucide-react";
+import { BarChart3, BookMarked, Upload, RefreshCw, Save, Download, Info, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import BarometerUploader from "@/components/barometer/BarometerUploader";
@@ -188,7 +188,7 @@ export default function BarometerGenerator() {
             </Button>
             <Link to="/">
               <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8">
-                ChartGenerator
+                <ArrowLeft className="w-3.5 h-3.5" />Tilbake
               </Button>
             </Link>
           </div>

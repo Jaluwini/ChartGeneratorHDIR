@@ -286,6 +286,11 @@ export default function SavedCharts() {
                 <ArrowLeft className="w-3.5 h-3.5" />Tilbake
               </Button>
             </Link>
+            <Link to="/chart">
+              <Button variant="ghost" size="sm" className="gap-1.5 text-xs h-8 text-muted-foreground hover:text-foreground hidden sm:flex">
+                Ny graf
+              </Button>
+            </Link>
           </div>
         </div>
       </header>
@@ -336,7 +341,7 @@ export default function SavedCharts() {
           <div className="text-center py-20 space-y-3">
             <BarChart3 className="w-12 h-12 text-muted-foreground/30 mx-auto" />
             <p className="text-sm text-muted-foreground">Ingen lagrede grafer ennå.</p>
-            <Link to="/"><Button size="sm" variant="outline" className="gap-1.5 text-xs">Lag en graf</Button></Link>
+            <Link to="/"><Button size="sm" variant="outline" className="gap-1.5 text-xs">Opprett ny visualisering</Button></Link>
           </div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-20">

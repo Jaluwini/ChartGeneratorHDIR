@@ -5,6 +5,7 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
+import CreateNew from './pages/CreateNew';
 import ChartGenerator from './pages/ChartGenerator';
 import SavedCharts from './pages/SavedCharts';
 import ApiSettings from './pages/ApiSettings';
@@ -32,7 +33,8 @@ const AuthenticatedApp = () => {
 
   return (
     <Routes>
-      <Route path="/" element={<ChartGenerator />} />
+      <Route path="/" element={<CreateNew />} />
+      <Route path="/chart" element={<ChartGenerator />} />
       <Route path="/saved" element={<SavedCharts />} />
       <Route path="/api-settings" element={<ApiSettings />} />
       <Route path="/barometer" element={<BarometerGenerator />} />

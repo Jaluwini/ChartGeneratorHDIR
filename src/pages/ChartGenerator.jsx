@@ -43,7 +43,10 @@ export default function ChartGenerator() {
   const [config, setConfig] = useState(DEFAULT_CONFIG);
   const [activeTab, setActiveTab] = useState("preview");
   const [validationError, setValidationError] = useState(null);
-  const [dataSource, setDataSource] = useState("api"); // "file" | "api"
+  const [dataSource, setDataSource] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("source") || "api";
+  }); // "file" | "api"
   const [apiSource, setApiSource] = useState(null); // "helsedirektoratet" etc.
   const [selectedIndicator, setSelectedIndicator] = useState(null); // { id, tittel, jsonUrl }
   const chartRef = useRef(null);
@@ -188,7 +191,7 @@ export default function ChartGenerator() {
               <BarChart3 className="w-4.5 h-4.5 text-primary w-[18px] h-[18px]" />
             </div>
             <div>
-              <span className="font-semibold text-sm text-foreground">ChartGenerator</span>
+              <span className="font-semibold text-sm text-foreground">Graf</span>
               <span className="hidden sm:inline text-xs text-muted-foreground ml-2"></span>
             </div>
           </div>
