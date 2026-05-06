@@ -94,7 +94,26 @@ export function buildBarometerConfig(config, data) {
     legendSymbol: "rectangle",
   }] : [];
 
-  // Series 2: national reference diamonds (when no range bars)
+  // Series 2: per-row reference line — scatter with a vertical line marker at each row's norway value
+  // The marker is a tall vertical rectangle (1px wide, ~18px tall) rendered as a custom path
+  const refLineColor = referenceLineColor || "#cc0000";
+  const refLineSeries = (colReference && hasRangeData) ? [{
+    name: "Nasjonalt gjennomsnitt",
+    type: "scatter",
+    data: rows.map((r, xi) =>
+      r.reference !== null ? { x: xi, y: r.reference, tooltipData: r } : null
+    ),
+    color: refLineColor,
+    marker: {
+      symbol: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='3' height='22'><rect x='1' y='0' width='2' height='22' fill='${encodeURIComponent(refLineColor)}'/></svg>")`,
+      width: 3,
+      height: 22,
+    },
+    showInLegend: true,
+    enableMouseTracking: false,
+    zIndex: 3,
+  }] : [];
+
   const refDotSeries = (!hasRangeData && colReference) ? [{
     name: "Nasjonalt gjennomsnitt",
     type: "scatter",
@@ -208,27 +227,7 @@ export function buildBarometerConfig(config, data) {
     });
   }
 
-  // Auto midtstrek: median of reference values when colReference is set and no fixed line
-  if (colReference && (referenceLineFixed === null || referenceLineFixed === undefined || referenceLineFixed === "")) {
-    const refVals = rows.map(r => r.reference).filter(v => v !== null);
-    if (refVals.length > 0) {
-      const sorted = [...refVals].sort((a, b) => a - b);
-      const mid = Math.floor(sorted.length / 2);
-      const medianRef = sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
-      yPlotLines.push({
-        value: medianRef,
-        color: referenceLineColor || "#cc0000",
-        width: 1.5,
-        dashStyle: "ShortDash",
-        zIndex: 4,
-        label: {
-          text: `Ref. (${medianRef.toFixed(decimals ?? 1)}${valueSuffix ? " " + valueSuffix : ""})`,
-          align: "left",
-          style: { color: referenceLineColor || "#cc0000", fontSize: "9px" },
-        },
-      });
-    }
-  }
+
 
   const hasThemes = themeSegments.length > 0;
   const marginRight = hasThemes ? 140 : 60;
@@ -317,7 +316,7 @@ export function buildBarometerConfig(config, data) {
         states: { hover: { enabled: true } },
       },
     },
-    series: [...rangeSeries, ...refDotSeries, ...diamondSeries],
+    series: [...rangeSeries, ...refLineSeries, ...refDotSeries, ...diamondSeries],
     credits: { enabled: false },
     exporting: { enabled: false },
   };
