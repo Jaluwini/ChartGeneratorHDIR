@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Table2, BookMarked, RefreshCw, Save, ArrowLeft, Eye, Code2, Maximize2, X, Edit2 } from "lucide-react";
+import { Table2, BookMarked, RefreshCw, Save, ArrowLeft, Eye, Code2, Maximize2, X, Edit2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import FileUploader from "@/components/chart/FileUploader";
@@ -114,6 +114,21 @@ export default function TableGenerator() {
   const [fullscreen, setFullscreen] = useState(false);
   const [showEditor, setShowEditor] = useState(false);
 
+  const createEmptyTable = () => {
+    const newColumns = [
+      { name: "Kolonne 1", type: "string" },
+      { name: "Kolonne 2", type: "string" },
+      { name: "Kolonne 3", type: "string" },
+    ];
+    const newData = Array(3).fill(null).map(() =>
+      Object.fromEntries(newColumns.map(c => [c.name, ""]))
+    );
+    setColumns(newColumns);
+    setData(newData);
+    setConfig(prev => ({ ...prev, title: prev.title || "Ny tabell" }));
+    setShowEditor(true);
+  };
+
   const TABS = [
     { id: "preview", label: "Forhåndsvisning", icon: Eye },
     { id: "export", label: "Eksport / API", icon: Code2 },
@@ -188,6 +203,16 @@ export default function TableGenerator() {
             </div>
             {dataSource === "file" && <FileUploader onDataLoaded={handleDataLoaded} />}
             {dataSource === "api" && <ApiDataImporter onDataLoaded={handleDataLoaded} onIndicatorSelected={() => {}} />}
+            {!data && (
+              <Button 
+                size="sm" 
+                onClick={createEmptyTable}
+                variant="outline"
+                className="w-full gap-1.5 text-xs h-8 border-dashed border-2"
+              >
+                <Plus className="w-3.5 h-3.5" />Lag tom tabell
+              </Button>
+            )}
             {data && <DataTable data={data} columns={columns} />}
           </div>
 
