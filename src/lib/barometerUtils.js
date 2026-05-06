@@ -5,23 +5,26 @@ function clean(v) {
   return isNaN(n) ? null : n;
 }
 
-function getDiamondColor(value, reference, config) {
-  if (value === null) return config.colorMissing || "#ffffff";
-  if (config.colorMode === "absolute") {
-    const diff = value - (reference ?? value);
-    const good = config.higherIsBetter !== false ? diff >= (config.thresholdGood ?? 0) : diff <= -(config.thresholdGood ?? 0);
-    const bad = config.higherIsBetter !== false ? diff <= (config.thresholdBad ?? 0) : diff >= -(config.thresholdBad ?? 0);
-    if (good) return config.colorGood || "#22c55e";
-    if (bad) return config.colorBad || "#ef4444";
+function getDiamondColor(relValue, config) {
+  // relValue is already relative to reference (i.e. value - norge)
+  if (relValue === null) return config.colorMissing || "#ffffff";
+  const effectiveDiff = config.higherIsBetter !== false ? relValue : -relValue;
+
+  if (config.colorMode === "relative") {
+    // For relative mode we need original value and reference to compute pct — pass relValue directly as absolute diff
+    const tGood = config.thresholdGood ?? 5;
+    const tBad = config.thresholdBad ?? -5;
+    if (effectiveDiff >= tGood) return config.colorGood || "#22c55e";
+    if (effectiveDiff <= tBad) return config.colorBad || "#ef4444";
     return config.colorNeutral || "#f59e0b";
   }
-  if (reference === null || reference === 0) return config.colorMissing || "#ffffff";
-  const pctDiff = ((value - reference) / Math.abs(reference)) * 100;
-  const effectiveDiff = config.higherIsBetter !== false ? pctDiff : -pctDiff;
-  const tGood = config.thresholdGood ?? 5;
-  const tBad = config.thresholdBad ?? -5;
-  if (effectiveDiff >= tGood) return config.colorGood || "#22c55e";
-  if (effectiveDiff <= tBad) return config.colorBad || "#ef4444";
+  if (config.colorMode === "absolute") {
+    const tGood = config.thresholdGood ?? 0;
+    const tBad = config.thresholdBad ?? 0;
+    if (effectiveDiff >= tGood) return config.colorGood || "#22c55e";
+    if (effectiveDiff <= tBad) return config.colorBad || "#ef4444";
+    return config.colorNeutral || "#f59e0b";
+  }
   return config.colorNeutral || "#f59e0b";
 }
 
@@ -39,16 +42,23 @@ export function buildBarometerConfig(config, data) {
 
   if (!data || data.length === 0 || !colIndicator || !colValue) return null;
 
-  // Process rows — keep original order, first row = top of chart
+  // Process rows — normalize all values relative to the reference (norge)
+  // So that norge = 0, and the red reference line is always at x = 0
   const rows = data.map((row, i) => {
-    const value = clean(row[colValue]);
-    const reference = colReference ? clean(row[colReference]) : null;
-    const minVal = colMin ? clean(row[colMin]) : null;
-    const maxVal = colMax ? clean(row[colMax]) : null;
+    const rawValue = clean(row[colValue]);
+    const rawReference = colReference ? clean(row[colReference]) : null;
+    const rawMin = colMin ? clean(row[colMin]) : null;
+    const rawMax = colMax ? clean(row[colMax]) : null;
     const unit = colUnit ? (row[colUnit] || "") : (valueSuffix || "");
     const period = colPeriod ? (row[colPeriod] || "") : "";
     const theme = colTheme ? (row[colTheme] || "") : null;
     const indicatorLabel = String(row[colIndicator] || `Indikator ${i + 1}`);
+
+    // Normalize: subtract the reference so norge = 0
+    const ref = rawReference ?? referenceLineFixed ?? null;
+    const relValue = rawValue !== null && ref !== null ? rawValue - ref : rawValue;
+    const relMin = rawMin !== null && ref !== null ? rawMin - ref : null;
+    const relMax = rawMax !== null && ref !== null ? rawMax - ref : null;
 
     let color;
     if (colorMode === "column" && colColor) {
@@ -58,67 +68,55 @@ export function buildBarometerConfig(config, data) {
       else if (raw === "yellow" || raw === "gul") color = colorNeutral || "#f59e0b";
       else color = colorMissing || "#ffffff";
     } else {
-      color = getDiamondColor(value, reference, config);
+      color = getDiamondColor(relValue, config);
     }
 
-    return { indicatorLabel, value, reference, minVal, maxVal, unit, period, theme, color, rowIndex: i };
+    return {
+      indicatorLabel,
+      // Relative values (used for plotting)
+      relValue, relMin, relMax,
+      // Raw values (used in tooltip)
+      rawValue, rawReference: ref, rawMin, rawMax,
+      unit, period, theme, color, rowIndex: i
+    };
   });
 
-  // With inverted chart: xAxis is vertical (categories), yAxis is horizontal (values).
-  // Categories on xAxis: first row at top means index 0 at top → use reversed: false on xAxis
-  // We map row index directly: row 0 = xAxis category 0 = top
   const categories = rows.map(r => r.indicatorLabel);
 
-  // Determine value axis (yAxis) range
-  const allValues = rows.flatMap(r => [r.value, r.minVal, r.maxVal, r.reference].filter(v => v !== null));
-  const yMin = allValues.length > 0 ? Math.min(...allValues) : 0;
-  const yMax = allValues.length > 0 ? Math.max(...allValues) : 100;
-  const yPad = (yMax - yMin) * 0.1;
+  // Determine axis range from relative values
+  const allRelValues = rows.flatMap(r => [r.relValue, r.relMin, r.relMax].filter(v => v !== null));
+  // Always include 0 (the reference line position)
+  allRelValues.push(0);
+  const yMin = Math.min(...allRelValues);
+  const yMax = Math.max(...allRelValues);
+  const yPad = Math.max((yMax - yMin) * 0.12, 0.5);
 
-  // Series 1: gray variation bars (columnrange)
-  // columnrange uses x=category index, low/high=value range
-  const hasRangeData = rows.some(r => r.minVal !== null && r.maxVal !== null);
+  // Series 1: gray variation bars (columnrange) — relative to reference
+  const hasRangeData = rows.some(r => r.relMin !== null && r.relMax !== null);
   const rangeSeries = hasRangeData && showReferenceBar !== false ? [{
     name: "Variasjon mellom fylkene",
     type: "columnrange",
     data: rows.map((r, xi) => {
-      if (r.minVal === null || r.maxVal === null) return null;
-      return { x: xi, low: r.minVal, high: r.maxVal, color: barColor || "#cccccc" };
+      if (r.relMin === null || r.relMax === null) return null;
+      return { x: xi, low: r.relMin, high: r.relMax, color: barColor || "#cccccc" };
     }),
     color: barColor || "#cccccc",
+    grouping: false,
     groupPadding: 0,
     pointPadding: 0.2,
     borderWidth: 0,
+    borderRadius: 2,
     enableMouseTracking: false,
     showInLegend: true,
     legendSymbol: "rectangle",
   }] : [];
 
-  // Series 2: per-row reference line — scatter with "line" symbol (horizontal in normal chart = vertical in inverted)
-  const refLineColor = referenceLineColor || "#cc0000";
-  const refLineSeries = (colReference && hasRangeData) ? [{
-    name: "Nasjonalt gjennomsnitt",
-    type: "scatter",
-    data: rows.map((r, xi) =>
-      r.reference !== null ? { x: xi, y: r.reference } : null
-    ),
-    color: refLineColor,
-    marker: {
-      symbol: "line",
-      lineWidth: 2,
-      lineColor: refLineColor,
-      radius: 10,
-    },
-    showInLegend: true,
-    enableMouseTracking: false,
-    zIndex: 3,
-  }] : [];
-
+  // Series 2: reference dot series when no range bars (shows norway position as a dot/diamond)
   const refDotSeries = (!hasRangeData && colReference) ? [{
     name: "Nasjonalt gjennomsnitt",
     type: "scatter",
     data: rows.map((r, xi) =>
-      r.reference !== null ? { x: xi, y: r.reference } : null
+      r.rawReference !== null ? { x: xi, y: 0 } : null
     ),
     marker: {
       symbol: "diamond",
@@ -141,8 +139,8 @@ export function buildBarometerConfig(config, data) {
 
   rows.forEach((r, xi) => {
     const grp = colorGroups[r.color] || colorGroups[colorNeutral || "#f59e0b"];
-    if (r.value !== null) {
-      grp.data.push({ x: xi, y: r.value, tooltipData: r });
+    if (r.relValue !== null) {
+      grp.data.push({ x: xi, y: r.relValue, tooltipData: r });
     }
   });
 
@@ -164,7 +162,7 @@ export function buildBarometerConfig(config, data) {
       zIndex: 5,
     }));
 
-  // Theme plotBands on xAxis (vertical axis after inversion)
+  // Theme plotBands on xAxis
   const xPlotBands = [];
   const themeSegments = [];
   if (colTheme) {
@@ -174,63 +172,70 @@ export function buildBarometerConfig(config, data) {
     rows.forEach((r, i) => {
       if (r.theme !== currentTheme) {
         if (currentTheme !== null) {
-          themes.push({ theme: currentTheme, from: startIdx - 0.5, to: i - 0.5, midpoint: (startIdx + i - 1) / 2 });
+          themes.push({ theme: currentTheme, from: startIdx - 0.5, to: i - 0.5 });
         }
         currentTheme = r.theme;
         startIdx = i;
       }
     });
     if (currentTheme !== null) {
-      themes.push({ theme: currentTheme, from: startIdx - 0.5, to: rows.length - 0.5, midpoint: (startIdx + rows.length - 1) / 2 });
+      themes.push({ theme: currentTheme, from: startIdx - 0.5, to: rows.length - 0.5 });
     }
     const bandColors = ["#f8f9fa", "#ffffff"];
     themes.forEach((t, i) => {
-    themeSegments.push(t);
-    xPlotBands.push({
-      from: t.from,
-      to: t.to,
-      color: bandColors[i % 2],
-      label: {
-        text: t.theme,
-        align: "right",
-        verticalAlign: "middle",
-        x: 130,
-        style: {
-          fontSize: "9px",
-          fontWeight: "700",
-          color: "#6b7280",
-          textTransform: "uppercase",
-          letterSpacing: "0.06em",
-          whiteSpace: "nowrap",
+      themeSegments.push(t);
+      xPlotBands.push({
+        from: t.from,
+        to: t.to,
+        color: bandColors[i % 2],
+        label: {
+          text: t.theme,
+          align: "right",
+          verticalAlign: "middle",
+          x: 130,
+          style: {
+            fontSize: "9px",
+            fontWeight: "700",
+            color: "#6b7280",
+            textTransform: "uppercase",
+            letterSpacing: "0.06em",
+            whiteSpace: "nowrap",
+          },
         },
-      },
-      zIndex: 1,
-    });
+        zIndex: 1,
+      });
     });
   }
 
-  // Reference plotLine on yAxis (horizontal value axis)
-  const yPlotLines = [];
+  // The reference is always at y = 0 — draw a fixed plotLine there
+  const refLineColor = referenceLineColor || "#cc0000";
+  const yPlotLines = [{
+    value: 0,
+    color: refLineColor,
+    width: 2,
+    zIndex: 4,
+  }];
 
-  // Fixed reference line
+  // If a fixed external reference line is set (not the norway line), draw it too
   if (referenceLineFixed !== null && referenceLineFixed !== undefined && referenceLineFixed !== "") {
     yPlotLines.push({
       value: parseFloat(referenceLineFixed),
-      color: referenceLineColor || "#cc0000",
-      width: 2,
-      zIndex: 4,
+      color: "#888",
+      width: 1,
+      dashStyle: "Dash",
+      zIndex: 3,
       label: {
-        text: "Ref.",
+        text: "Fast ref.",
         align: "left",
-        style: { color: referenceLineColor || "#cc0000", fontSize: "10px" },
+        style: { color: "#888", fontSize: "10px" },
       },
     });
   }
 
-
-
   const hasThemes = themeSegments.length > 0;
   const marginRight = hasThemes ? 140 : 60;
+
+  const dec = decimals ?? 1;
 
   return {
     chart: {
@@ -243,7 +248,6 @@ export function buildBarometerConfig(config, data) {
     },
     title: { text: title || "", style: { fontSize: "15px", fontWeight: "600" } },
     subtitle: { text: subtitle || "" },
-    // xAxis = vertical after inversion → shows indicator categories
     xAxis: {
       categories,
       title: { text: "" },
@@ -259,7 +263,7 @@ export function buildBarometerConfig(config, data) {
       tickInterval: 1,
       reversed: false,
     },
-    // yAxis = horizontal after inversion → shows numeric values
+    // yAxis is the horizontal value axis — now in relative units (diff from norway)
     yAxis: {
       min: yMin - yPad,
       max: yMax + yPad,
@@ -269,7 +273,8 @@ export function buildBarometerConfig(config, data) {
       plotLines: yPlotLines,
       labels: {
         formatter: function () {
-          return this.value.toFixed(decimals ?? 1) + (valueSuffix ? ` ${valueSuffix}` : "");
+          const sign = this.value > 0 ? "+" : "";
+          return sign + this.value.toFixed(dec) + (valueSuffix ? ` ${valueSuffix}` : "");
         },
         style: { fontSize: "10px" },
       },
@@ -289,16 +294,20 @@ export function buildBarometerConfig(config, data) {
       formatter: function () {
         const td = this.point.tooltipData;
         if (!td) return `<b>${this.series.name}</b>`;
-        const dec = decimals ?? 1;
         const suf = td.unit || valueSuffix || "";
-        let html = `<div style="font-family:Inter,sans-serif;font-size:12px;max-width:240px;">`;
+        const fmt = (v) => v !== null && v !== undefined ? v.toFixed(dec) + (suf ? " " + suf : "") : "–";
+        const fmtRel = (v) => v !== null && v !== undefined
+          ? (v >= 0 ? "+" : "") + v.toFixed(dec) + (suf ? " " + suf : "")
+          : "–";
+        let html = `<div style="font-family:Inter,sans-serif;font-size:12px;max-width:260px;">`;
         html += `<div style="font-weight:600;margin-bottom:4px;">${td.indicatorLabel}</div>`;
-        if (td.value !== null) html += `<div>Verdi: <b>${td.value.toFixed(dec)}${suf ? " " + suf : ""}</b></div>`;
-        if (td.reference !== null) html += `<div>Referanse: <b>${td.reference.toFixed(dec)}${suf ? " " + suf : ""}</b></div>`;
-        if (td.minVal !== null && td.maxVal !== null) html += `<div>Variasjon: <b>${td.minVal.toFixed(dec)} – ${td.maxVal.toFixed(dec)}${suf ? " " + suf : ""}</b></div>`;
-        if (td.period) html += `<div style="color:#888;font-size:10px;margin-top:2px;">Periode: ${td.period}</div>`;
-        if (td.unit) html += `<div style="color:#888;font-size:10px;">Enhet: ${td.unit}</div>`;
-        html += `</div>`;
+        html += `<table style="border-spacing:0 2px;width:100%">`;
+        if (td.rawValue !== null) html += `<tr><td style="color:#888;padding-right:8px">Fylke:</td><td><b>${fmt(td.rawValue)}</b></td></tr>`;
+        if (td.rawReference !== null) html += `<tr><td style="color:#888;padding-right:8px">Norge:</td><td><b>${fmt(td.rawReference)}</b></td></tr>`;
+        if (td.rawMin !== null && td.rawMax !== null) html += `<tr><td style="color:#888;padding-right:8px">Variasjon:</td><td><b>${fmt(td.rawMin)} – ${fmt(td.rawMax)}</b></td></tr>`;
+        if (td.relValue !== null) html += `<tr><td style="color:#888;padding-right:8px">Diff. fra Norge:</td><td><b>${fmtRel(td.relValue)}</b></td></tr>`;
+        if (td.period) html += `<tr><td style="color:#888;padding-right:8px;font-size:10px">Periode:</td><td style="font-size:10px">${td.period}</td></tr>`;
+        html += `</table></div>`;
         return html;
       },
     },
@@ -307,16 +316,16 @@ export function buildBarometerConfig(config, data) {
       columnrange: {
         grouping: false,
         groupPadding: 0,
-        pointPadding: 0.25,
+        pointPadding: 0.2,
         borderWidth: 0,
-        borderRadius: 3,
+        borderRadius: 2,
       },
       scatter: {
         jitter: { x: 0, y: 0 },
         states: { hover: { enabled: true } },
       },
     },
-    series: [...rangeSeries, ...refLineSeries, ...refDotSeries, ...diamondSeries],
+    series: [...rangeSeries, ...refDotSeries, ...diamondSeries],
     credits: { enabled: false },
     exporting: { enabled: false },
   };
