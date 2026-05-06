@@ -130,6 +130,9 @@ export function buildHighchartsConfig(config, data) {
   const isLineColumn = chartType === "line_column";
   const isPie = chartType === "pie";
 
+  // For line_column, don't force actualType, let serieTypes config determine each serie's type
+  const baseType = isLineColumn ? undefined : actualType;
+
   let workingData = [...data];
   if (sortData && sortData !== "none" && xAxis) {
     workingData.sort((a, b) => {
@@ -224,9 +227,13 @@ export function buildHighchartsConfig(config, data) {
       const groupRows = workingData.filter(row => String(row[groupBy]) === group);
       const catMap = {};
       groupRows.forEach(row => { catMap[String(row[xAxis])] = cleanNumeric(row[yCol]) || 0; });
+      let serieType = actualType;
+      if (isLineColumn && config.serieTypes) {
+        serieType = config.serieTypes[group] || "column";
+      }
       return {
         name: group,
-        type: actualType,
+        type: serieType,
         data: categories.map(cat => catMap[cat] ?? null),
         dataLabels: {
           enabled: dataLabels === true,
@@ -238,8 +245,8 @@ export function buildHighchartsConfig(config, data) {
   } else {
     series = yAxes.map((yCol, yi) => {
       let serieType = actualType;
-      if (isLineColumn) {
-        serieType = config.serieTypes?.[yCol] || "column";
+      if (isLineColumn && config.serieTypes) {
+        serieType = config.serieTypes[yCol] || "column";
       }
       return {
         name: yCol,
