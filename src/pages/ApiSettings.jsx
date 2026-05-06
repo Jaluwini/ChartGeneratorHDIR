@@ -145,10 +145,119 @@ Highcharts.chart("container", hc_config);`}</pre>
                 <p className="font-medium text-foreground mb-2">Response: Highcharts-konfigurasjon</p>
                 <p>Responsen er en komplett Highcharts-konfigurasjon som er klar til bruk. Bytt <code className="font-mono text-[11px] bg-foreground/10 px-1 rounded">CHART_ID</code> med ID-en på grafen du vil hente.</p>
               </div>
-            </div>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
+              </div>
+
+              {/* API Documentation */}
+              <div className="bg-card rounded-2xl border border-border p-6 shadow-sm space-y-4">
+              <div>
+                <h2 className="font-semibold text-foreground">API Dokumentasjon</h2>
+                <p className="text-xs text-muted-foreground mt-1">Oversikt over tilgjengelige APIer og hvordan de brukes</p>
+              </div>
+
+              <div className="space-y-4">
+                {/* Highcharts API */}
+                <div className="border border-border rounded-lg p-4 space-y-3">
+                  <h3 className="font-medium text-sm text-foreground">Highcharts Chart API</h3>
+                  <p className="text-xs text-muted-foreground">Hent komplette Highcharts-konfigurasjoner for grafer. Ideelt for integrering i eksterne websider eller applikasjoner.</p>
+
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Endepunkt</p>
+                    <code className="block px-3 py-2 rounded-lg bg-muted/40 border border-border text-xs font-mono text-foreground break-all">{apiBase}</code>
+                  </div>
+
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Parametere</p>
+                    <div className="text-xs text-muted-foreground space-y-1 px-3 py-2 rounded-lg bg-muted/30">
+                      <p><code className="font-mono bg-foreground/10 px-1 rounded">id</code> - (valgfri) Graf-ID. Hvis utelatt, returneres liste over alle eksponerte grafer</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Response Fields</p>
+                    <div className="text-xs text-muted-foreground space-y-1 px-3 py-2 rounded-lg bg-muted/30">
+                      <p><code className="font-mono bg-foreground/10 px-1 rounded">chart</code> - Highcharts chart type og options</p>
+                      <p><code className="font-mono bg-foreground/10 px-1 rounded">title, subtitle</code> - Grafens titler</p>
+                      <p><code className="font-mono bg-foreground/10 px-1 rounded">xAxis, yAxis</code> - Aksekonfigurasjoner</p>
+                      <p><code className="font-mono bg-foreground/10 px-1 rounded">series</code> - Dataserier med verdier</p>
+                      <p><code className="font-mono bg-foreground/10 px-1 rounded">colors</code> - Fargepalett</p>
+                      <p><code className="font-mono bg-foreground/10 px-1 rounded">legend, tooltip</code> - Visningsinnstillinger</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Eksempel: Integrer i HTML</p>
+                    <div className="rounded-lg border border-border overflow-auto bg-[hsl(222,47%,8%)]">
+                      <pre className="code-block text-[hsl(210,40%,85%)] p-3 text-[0.7rem]">{`<script src="https://code.highcharts.com/highcharts.js"></script>
+              <div id="chart-container"></div>
+              <script>
+              fetch("${apiBase}?id=CHART_ID")
+              .then(res => res.json())
+              .then(config => {
+              Highcharts.chart("chart-container", config);
+              });
+              </script>`}</pre>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Table API */}
+                <div className="border border-border rounded-lg p-4 space-y-3">
+                  <h3 className="font-medium text-sm text-foreground">Table API</h3>
+                  <p className="text-xs text-muted-foreground">Hent strukturerte tabelldata i JSON-format. Perfekt for dataintegrasjon og rapportgenerering.</p>
+
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Endepunkt</p>
+                    <code className="block px-3 py-2 rounded-lg bg-muted/40 border border-border text-xs font-mono text-foreground break-all">GET {apiBase.replace('getChart', 'renderTable')}?id=TABLE_ID&format=json</code>
+                  </div>
+
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Parametere</p>
+                    <div className="text-xs text-muted-foreground space-y-1 px-3 py-2 rounded-lg bg-muted/30">
+                      <p><code className="font-mono bg-foreground/10 px-1 rounded">id</code> - (påkrevd) Tabell-ID</p>
+                      <p><code className="font-mono bg-foreground/10 px-1 rounded">format</code> - (valgfri) <code className="font-mono">json</code> eller <code className="font-mono">html</code> (default: html)</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">JSON Response Fields</p>
+                    <div className="text-xs text-muted-foreground space-y-1 px-3 py-2 rounded-lg bg-muted/30">
+                      <p><code className="font-mono bg-foreground/10 px-1 rounded">title</code> - Tabelltittel</p>
+                      <p><code className="font-mono bg-foreground/10 px-1 rounded">columns</code> - Array av kolonnenavn og typer</p>
+                      <p><code className="font-mono bg-foreground/10 px-1 rounded">rows</code> - Array av datarader</p>
+                      <p><code className="font-mono bg-foreground/10 px-1 rounded">config</code> - Tabell styling og layout innstillinger</p>
+                      <p><code className="font-mono bg-foreground/10 px-1 rounded">metadata</code> - Kilde, dato og annen informasjon</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Eksempel: Hent JSON Data</p>
+                    <div className="rounded-lg border border-border overflow-auto bg-[hsl(222,47%,8%)]">
+                      <pre className="code-block text-[hsl(210,40%,85%)] p-3 text-[0.7rem]">{`fetch("${apiBase.replace('getChart', 'renderTable')}?id=TABLE_ID&format=json")
+              .then(res => res.json())
+              .then(data => {
+              console.log(data.columns); // [{ name: "...", type: "..." }]
+              console.log(data.rows);    // [{ col1: "...", col2: ... }]
+              });`}</pre>
+                    </div>
+                  </div>
+                </div>
+
+                {/* General Guidelines */}
+                <div className="border border-border rounded-lg p-4 space-y-3 bg-accent/30">
+                  <h3 className="font-medium text-sm text-foreground">Generelle Retningslinjer</h3>
+                  <ul className="text-xs text-muted-foreground space-y-2 list-disc list-inside">
+                    <li>Alle API-endepunkter returnerer CORS-headers slik at de kan kalles fra browseren</li>
+                    <li>Responser er i JSON-format og kan lagres, cachees eller prosesseres som behov tilsier</li>
+                    <li>For tabeller: Bruk <code className="font-mono bg-foreground/10 px-1 rounded">format=html</code> for å få ferdig renderet HTML, ideelt for direkte visning</li>
+                    <li>Kun grafer og tabeller som er markert som "Eksponert i API" vil være tilgjengelig via APIet</li>
+                    <li>Dataene oppdateres i real-tid basert på konfigurasjonsendringer i applikasjonen</li>
+                  </ul>
+                </div>
+              </div>
+              </div>
+              </>
+              )}
+              </div>
+              </div>
+              );
+              }
