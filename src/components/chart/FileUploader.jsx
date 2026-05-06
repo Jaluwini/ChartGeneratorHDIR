@@ -115,25 +115,54 @@ export default function FileUploader({ onDataLoaded }) {
     if (file) handleFile(file);
   };
 
+  const handlePaste = (e) => {
+    const text = e.clipboardData?.getData("text/plain");
+    if (!text) return;
+    setError(null);
+    setFileName("pasted_data");
+    try {
+      const lines = text.trim().split("\n");
+      if (lines.length === 0) {
+        setError("No data in clipboard.");
+        return;
+      }
+      const headers = lines[0].split("\t");
+      const data = lines.slice(1).map(line => {
+        const values = line.split("\t");
+        return Object.fromEntries(headers.map((h, i) => [h, values[i] || ""]));
+      });
+      if (data.length === 0) {
+        setError("Clipboard data has no rows.");
+        return;
+      }
+      const columns = detectColumns(data);
+      onDataLoaded({ data, columns, fileName: "pasted_data" });
+    } catch (err) {
+      setError("Failed to parse clipboard data. Make sure it's tab-separated.");
+    }
+  };
+
   return (
     <div className="space-y-3">
       <div
         onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
         onDragLeave={() => setDragging(false)}
         onDrop={onDrop}
+        onPaste={handlePaste}
         onClick={() => inputRef.current?.click()}
         className={`relative flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed cursor-pointer transition-all p-5
           ${dragging
             ? "border-primary bg-accent/50 scale-[1.01]"
             : "border-border hover:border-primary/50 hover:bg-accent/30 bg-muted/30"
           }`}
+        tabIndex={0}
       >
         <div className="p-2.5 rounded-xl bg-primary/10">
           <Upload className="w-5 h-5 text-primary" />
         </div>
         <div className="text-center">
-          <p className="text-sm font-medium text-foreground">Drop file here or click to upload</p>
-          <p className="text-xs text-muted-foreground mt-0.5">CSV, XLS, XLSX, JSON supported</p>
+          <p className="text-sm font-medium text-foreground">Drop file, paste data, or click to upload</p>
+          <p className="text-xs text-muted-foreground mt-0.5">CSV, XLS, XLSX, JSON, or tab-separated from Excel/Word</p>
         </div>
         <input ref={inputRef} type="file" accept=".csv,.xls,.xlsx,.json" className="hidden" onChange={onFileInput} />
       </div>

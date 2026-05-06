@@ -105,18 +105,18 @@ export default function TablePreview({ data, columns, config }) {
 
       {/* Table */}
       <div className="overflow-x-auto">
-        <table className={`w-full border-collapse ${fontSizeClass}`}>
-          <thead>
+        <table className={`w-full border-collapse ${fontSizeClass}`} style={{ tableLayout: config.nowrap ? "fixed" : "auto" }}>
+          <thead style={config.stickyHeader !== false ? { position: "sticky", top: 0, zIndex: 10 } : {}}>
             <tr style={{ background: headerBg }}>
               {config.showRowNumbers && (
-                <th className={`${cellPadding} text-left font-semibold whitespace-nowrap border-b`}
+                <th className={`${cellPadding} text-left font-semibold ${!config.nowrap ? "whitespace-nowrap" : ""} border-b`}
                   style={{ color: headerText, borderColor }}>#</th>
               )}
               {visibleCols.map(col => (
                 <th
                   key={col.name}
                   onClick={() => handleSort(col)}
-                  className={`${cellPadding} font-semibold whitespace-nowrap border-b select-none ${config.sortable !== false ? "cursor-pointer hover:opacity-80" : ""}`}
+                  className={`${cellPadding} font-semibold ${!config.nowrap ? "whitespace-nowrap" : ""} border-b select-none ${config.sortable !== false ? "cursor-pointer hover:opacity-80" : ""}`}
                   style={{ color: headerText, borderColor, textAlign }}
                 >
                   <span className="inline-flex items-center gap-1">
@@ -157,12 +157,13 @@ export default function TablePreview({ data, columns, config }) {
                     return (
                       <td
                         key={col.name}
-                        className={`${cellPadding} whitespace-nowrap`}
+                        className={`${cellPadding} ${!config.nowrap ? "whitespace-nowrap" : ""}`}
                         style={{
                           textAlign,
                           color: isNum && config.highlightNumbers ? numberColor : undefined,
                           background: cfColor || undefined,
                           fontWeight: isNum && config.highlightNumbers ? 500 : undefined,
+                          overflowWrap: config.nowrap ? "break-word" : "normal",
                         }}
                       >
                         {String(val ?? "")}

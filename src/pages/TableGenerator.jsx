@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Table2, BookMarked, RefreshCw, Save, ArrowLeft, Eye, Code2, Maximize2, X } from "lucide-react";
+import { Table2, BookMarked, RefreshCw, Save, ArrowLeft, Eye, Code2, Maximize2, X, Edit2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import FileUploader from "@/components/chart/FileUploader";
@@ -9,6 +9,7 @@ import DataTable from "@/components/chart/DataTable";
 import TableConfig from "@/components/table/TableConfig";
 import TablePreview from "@/components/table/TablePreview";
 import TableExportPanel from "@/components/table/TableExportPanel";
+import TableEditor from "@/components/table/TableEditor";
 import { base44 } from "@/api/base44Client";
 
 const DEFAULT_CONFIG = {
@@ -27,6 +28,7 @@ const DEFAULT_CONFIG = {
   pageSize: 0,
   visibleColumns: null,
   columnAliases: {},
+  nowrap: false,
   headerBg: "#f4f4f5",
   headerText: "#111827",
   stripedColor: "#f9fafb",
@@ -110,6 +112,7 @@ export default function TableGenerator() {
   };
 
   const [fullscreen, setFullscreen] = useState(false);
+  const [showEditor, setShowEditor] = useState(false);
 
   const TABS = [
     { id: "preview", label: "Forhåndsvisning", icon: Eye },
@@ -189,14 +192,37 @@ export default function TableGenerator() {
           </div>
 
           {data && (
-            <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-card rounded-2xl border border-border p-4 shadow-sm"
-            >
-              <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Konfigurasjon</h2>
-              <TableConfig config={config} onChange={setConfig} columns={columns} />
-            </motion.div>
+            <>
+              <Button 
+                size="sm" 
+                onClick={() => setShowEditor(!showEditor)}
+                variant={showEditor ? "default" : "outline"}
+                className="gap-1.5 text-xs h-8 w-full"
+              >
+                <Edit2 className="w-3.5 h-3.5" />
+                {showEditor ? "Lukk redigering" : "Rediger data"}
+              </Button>
+
+              {showEditor && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-card rounded-2xl border border-border p-4 shadow-sm"
+                >
+                  <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Rediger tabelldata</h2>
+                  <TableEditor data={data} columns={columns} onDataChange={setData} />
+                </motion.div>
+              )}
+
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-card rounded-2xl border border-border p-4 shadow-sm"
+              >
+                <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Konfigurasjon</h2>
+                <TableConfig config={config} onChange={setConfig} columns={columns} />
+              </motion.div>
+            </>
           )}
         </aside>
 
@@ -231,7 +257,7 @@ export default function TableGenerator() {
                   <div className="p-4 rounded-2xl bg-muted/50"><Table2 className="w-10 h-10 opacity-30" /></div>
                   <div className="text-center">
                     <p className="text-sm font-medium">Ingen data lastet opp ennå</p>
-                    <p className="text-xs mt-1 opacity-70">Last opp en CSV, Excel eller JSON-fil for å starte</p>
+                    <p className="text-xs mt-1 opacity-70">Last opp en CSV, Excel eller JSON-fil, eller lim inn data fra Excel/Google Sheets</p>
                   </div>
                 </motion.div>
               ) : activeTab === "preview" ? (

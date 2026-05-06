@@ -141,13 +141,14 @@ export default function TableConfig({ config, onChange, columns }) {
 
       {/* Visning */}
       <Section title="Layout og visning">
-        <Toggle label="Stripete rader" value={config.striped !== false} onChange={v => set("striped", v)} />
-        <Toggle label="Kompakt visning" value={!!config.compact} onChange={v => set("compact", v)} />
-        <Toggle label="Frys header ved scroll" value={config.stickyHeader !== false} onChange={v => set("stickyHeader", v)} />
-        <Toggle label="Søkefelt" value={config.showSearch !== false} onChange={v => set("showSearch", v)} />
-        <Toggle label="Sortering ved klikk" value={config.sortable !== false} onChange={v => set("sortable", v)} />
-        <Toggle label="Vis radnummer" value={!!config.showRowNumbers} onChange={v => set("showRowNumbers", v)} />
-        <Toggle label="Uthev tallkolonner" value={!!config.highlightNumbers} onChange={v => set("highlightNumbers", v)} />
+       <Toggle label="Stripete rader" value={config.striped !== false} onChange={v => set("striped", v)} />
+       <Toggle label="Kompakt visning" value={!!config.compact} onChange={v => set("compact", v)} />
+       <Toggle label="Frys header ved scroll" value={config.stickyHeader !== false} onChange={v => set("stickyHeader", v)} />
+       <Toggle label="Søkefelt" value={config.showSearch !== false} onChange={v => set("showSearch", v)} />
+       <Toggle label="Sortering ved klikk" value={config.sortable !== false} onChange={v => set("sortable", v)} />
+       <Toggle label="Vis radnummer" value={!!config.showRowNumbers} onChange={v => set("showRowNumbers", v)} />
+       <Toggle label="Uthev tallkolonner" value={!!config.highlightNumbers} onChange={v => set("highlightNumbers", v)} />
+       <Toggle label="Ikke bryt tekst" value={!!config.nowrap} onChange={v => set("nowrap", v)} />
 
         <div className="space-y-1">
           <Label className="text-xs text-muted-foreground">Tekstjustering</Label>
