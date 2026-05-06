@@ -146,6 +146,8 @@ export default function SavedCharts() {
   const [editingFolderFor, setEditingFolderFor] = useState(null);
   const [search, setSearch] = useState("");
   const [activeFolder, setActiveFolder] = useState(null); // null = alle
+  const [filterDynamic, setFilterDynamic] = useState(false);
+  const [filterApi, setFilterApi] = useState(false);
   const navigate = useNavigate();
 
   const load = async () => {
@@ -185,7 +187,9 @@ export default function SavedCharts() {
   const filtered = charts.filter(c => {
     const matchSearch = !search || c.title?.toLowerCase().includes(search.toLowerCase()) || c.folder?.toLowerCase().includes(search.toLowerCase());
     const matchFolder = activeFolder === null || c.folder === activeFolder;
-    return matchSearch && matchFolder;
+    const matchDynamic = !filterDynamic || !!c.api_source;
+    const matchApiExposed = !filterApi || !!c.exposed_in_api;
+    return matchSearch && matchFolder && matchDynamic && matchApiExposed;
   });
 
   // Group by folder for display
@@ -317,6 +321,22 @@ export default function SavedCharts() {
                 className="w-full pl-8 pr-3 py-2 text-xs rounded-lg border border-border bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
               />
             </div>
+            <div className="flex items-center gap-1.5 flex-wrap">
+                <button
+                  onClick={() => setFilterDynamic(f => !f)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${filterDynamic ? "bg-blue-500 text-white border-blue-500" : "bg-card text-muted-foreground border-border hover:bg-muted"}`}
+                >
+                  Dynamisk
+                </button>
+                <button
+                  onClick={() => setFilterApi(f => !f)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${filterApi ? "bg-green-600 text-white border-green-600" : "bg-card text-muted-foreground border-border hover:bg-muted"}`}
+                >
+                  <Globe className="w-3 h-3" />
+                  Eksponert i API
+                </button>
+              </div>
+
             {folders.length > 0 && (
               <div className="flex items-center gap-1.5 flex-wrap">
                 <button
