@@ -292,17 +292,19 @@ export function buildHighchartsConfig(config, data) {
     },
     legend: { enabled: legend !== false },
     tooltip: tooltipFormat
-      ? { pointFormat: tooltipFormat }
-      : {
-          shared: true,
-          formatter: function() {
-            let s = `<span style="font-size:11px">${this.x}</span><br/>`;
-            this.points.forEach(pt => {
-              s += `<span style="color:${pt.color}">●</span> ${pt.series.name}: <b>${fmtTooltip(pt.y)}</b><br/>`;
-            });
-            return s;
-          }
-        },
+       ? { pointFormat: tooltipFormat }
+       : {
+           shared: true,
+           formatter: function() {
+             let s = `<span style="font-size:11px">${this.x}</span><br/>`;
+             const total = this.points.reduce((sum, pt) => sum + (pt.y || 0), 0);
+             this.points.forEach(pt => {
+               const pct = total > 0 ? ((pt.y / total) * 100).toFixed(1) : 0;
+               s += `<span style="color:${pt.color}">●</span> ${pt.series.name}: <b>${fmtTooltip(pt.y)}</b> (${pct}%)<br/>`;
+             });
+             return s;
+           }
+         },
     series,
     credits: config.sourceName
       ? { enabled: true, text: `Kilde: ${config.sourceName}`, href: config.sourceUrl || null, style: { cursor: config.sourceUrl ? "pointer" : "default", color: config.sourceUrl ? "#4f6ef7" : "#888", fontSize: "11px" } }
