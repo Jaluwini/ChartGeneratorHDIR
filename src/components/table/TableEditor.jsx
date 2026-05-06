@@ -1,10 +1,13 @@
 import { useState } from "react";
-import { Plus, Trash2, Edit2, X } from "lucide-react";
+import { Plus, Trash2, X, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function TableEditor({ data, columns, onDataChange }) {
   const [editCell, setEditCell] = useState(null);
   const [editValue, setEditValue] = useState("");
+  const [merges, setMerges] = useState([]);
+  const [selectedCells, setSelectedCells] = useState(new Set());
+  const [selectionStart, setSelectionStart] = useState(null);
 
   const startEdit = (rowIdx, colName) => {
     setEditCell({ rowIdx, colName });
@@ -43,6 +46,69 @@ export default function TableEditor({ data, columns, onDataChange }) {
     onDataChange(newData);
   };
 
+  const toggleCellSelection = (rowIdx, colIdx, e) => {
+    if (e.ctrlKey || e.metaKey) {
+      const cellKey = `${rowIdx}-${colIdx}`;
+      const newSelected = new Set(selectedCells);
+      if (newSelected.has(cellKey)) {
+        newSelected.delete(cellKey);
+      } else {
+        newSelected.add(cellKey);
+      }
+      setSelectedCells(newSelected);
+    } else if (e.shiftKey && selectionStart !== null) {
+      const [startRow, startCol] = selectionStart;
+      const newSelected = new Set();
+      const minRow = Math.min(startRow, rowIdx);
+      const maxRow = Math.max(startRow, rowIdx);
+      const minCol = Math.min(startCol, colIdx);
+      const maxCol = Math.max(startCol, colIdx);
+      for (let r = minRow; r <= maxRow; r++) {
+        for (let c = minCol; c <= maxCol; c++) {
+          newSelected.add(`${r}-${c}`);
+        }
+      }
+      setSelectedCells(newSelected);
+    } else {
+      setSelectionStart([rowIdx, colIdx]);
+      setSelectedCells(new Set([`${rowIdx}-${colIdx}`]));
+    }
+  };
+
+  const mergeCells = () => {
+    if (selectedCells.size < 2) return;
+    const cells = Array.from(selectedCells).map(key => {
+      const [r, c] = key.split('-').map(Number);
+      return [r, c];
+    });
+    const minRow = Math.min(...cells.map(c => c[0]));
+    const maxRow = Math.max(...cells.map(c => c[0]));
+    const minCol = Math.min(...cells.map(c => c[1]));
+    const maxCol = Math.max(...cells.map(c => c[1]));
+    const mergeKey = `${minRow}-${minCol}-${maxRow}-${maxCol}`;
+    if (!merges.some(m => m === mergeKey)) {
+      setMerges([...merges, mergeKey]);
+    }
+    setSelectedCells(new Set());
+  };
+
+  const isCellMerged = (rowIdx, colIdx) => {
+    return merges.some(merge => {
+      const [mr1, mc1, mr2, mc2] = merge.split('-').map(Number);
+      return rowIdx >= mr1 && rowIdx <= mr2 && colIdx >= mc1 && colIdx <= mc2 && !(rowIdx === mr1 && colIdx === mc1);
+    });
+  };
+
+  const getCellMergeSpan = (rowIdx, colIdx) => {
+    for (const merge of merges) {
+      const [mr1, mc1, mr2, mc2] = merge.split('-').map(Number);
+      if (rowIdx === mr1 && colIdx === mc1) {
+        return { rowSpan: mr2 - mr1 + 1, colSpan: mc2 - mc1 + 1 };
+      }
+    }
+    return null;
+  };
+
   return (
     <div className="space-y-3">
       <div className="flex gap-2">
@@ -52,10 +118,21 @@ export default function TableEditor({ data, columns, onDataChange }) {
         <Button size="sm" variant="outline" onClick={addColumn} className="gap-1.5 text-xs h-8">
           <Plus className="w-3.5 h-3.5" />Legg til kolonne
         </Button>
+        {selectedCells.size > 1 && (
+          <Button size="sm" onClick={mergeCells} className="gap-1.5 text-xs h-8 bg-primary">
+            <Copy className="w-3.5 h-3.5" />Slå sammen {selectedCells.size} celler
+          </Button>
+        )}
       </div>
 
+      {selectedCells.size > 0 && (
+        <p className="text-xs text-muted-foreground">
+          {selectedCells.size} celle(r) valgt • Bruk Ctrl/Cmd+klikk for flere, Shift+klikk for område
+        </p>
+      )}
+
       <div className="overflow-x-auto border border-border rounded-lg">
-        <table className="w-full text-xs">
+        <table className="w-full text-xs border-collapse">
           <thead>
             <tr className="bg-muted/50 border-b border-border">
               <th className="px-2 py-1.5 text-left font-medium text-muted-foreground w-8">#</th>
@@ -90,10 +167,21 @@ export default function TableEditor({ data, columns, onDataChange }) {
                     </button>
                   </div>
                 </td>
-                {columns.map(col => {
+                {columns.map((col, colIdx) => {
+                  if (isCellMerged(rowIdx, colIdx)) return null;
+                  
+                  const mergeSpan = getCellMergeSpan(rowIdx, colIdx);
                   const isEditing = editCell?.rowIdx === rowIdx && editCell?.colName === col.name;
+                  const isSelected = selectedCells.has(`${rowIdx}-${colIdx}`);
+                  
                   return (
-                    <td key={col.name} className="px-2 py-1 border-l border-border/30">
+                    <td
+                      key={col.name}
+                      className={`px-2 py-1 border-l border-border/30 cursor-pointer ${isSelected ? 'bg-primary/20' : ''}`}
+                      rowSpan={mergeSpan?.rowSpan}
+                      colSpan={mergeSpan?.colSpan}
+                      onClick={(e) => toggleCellSelection(rowIdx, colIdx, e)}
+                    >
                       {isEditing ? (
                         <div className="flex gap-1">
                           <input
@@ -116,7 +204,10 @@ export default function TableEditor({ data, columns, onDataChange }) {
                         </div>
                       ) : (
                         <div
-                          onClick={() => startEdit(rowIdx, col.name)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            startEdit(rowIdx, col.name);
+                          }}
                           className="px-1 py-0.5 rounded cursor-pointer hover:bg-muted/50 transition-colors text-foreground/80 truncate max-w-[150px]"
                           title={String(row[col.name] ?? "")}
                         >
