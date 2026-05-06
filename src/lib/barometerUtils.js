@@ -171,10 +171,10 @@ export function buildBarometerConfig(config, data) {
         color: bandColors[i % 2],
         label: {
           useHTML: true,
-          text: `<span style="display:inline-block;writing-mode:vertical-rl;transform:rotate(180deg);font-size:8px;color:#666;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;white-space:nowrap;">${t.theme}</span>`,
-          align: "right",
+          text: `<span style="display:inline-block;writing-mode:vertical-rl;transform:rotate(180deg);font-size:8px;color:#555;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;white-space:nowrap;">${t.theme}</span>`,
+          align: "left",
           verticalAlign: "middle",
-          x: -315,
+          x: 8,
         },
         zIndex: 1,
       });
@@ -203,7 +203,7 @@ export function buildBarometerConfig(config, data) {
       inverted: true,
       height: height || Math.max(400, rows.length * 28 + 120),
       marginLeft: 320,
-      marginRight: 60,
+      marginRight: 80,
       style: { fontFamily: "Inter, sans-serif" },
     },
     title: { text: title || "", style: { fontSize: "15px", fontWeight: "600" } },
