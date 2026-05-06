@@ -282,7 +282,7 @@ export function buildBarometerConfig(config, data) {
     },
     legend: {
       enabled: true,
-      align: "right",
+      align: "center",
       verticalAlign: "top",
       layout: "horizontal",
       itemStyle: { fontSize: "10px", fontWeight: "500", color: "#555" },

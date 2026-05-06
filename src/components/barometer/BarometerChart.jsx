@@ -37,8 +37,6 @@ export default function BarometerChart({ hcConfig }) {
           enabled: true,
           buttons: {
             contextButton: {
-              align: "left",
-              verticalAlign: "bottom",
               menuItems: ["downloadPNG", "downloadJPEG", "downloadSVG", "downloadPDF"]
             }
           }
