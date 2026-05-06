@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Table2, BookMarked, RefreshCw, Save, ArrowLeft, Eye, Code2 } from "lucide-react";
+import { Table2, BookMarked, RefreshCw, Save, ArrowLeft, Eye, Code2, Maximize2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import FileUploader from "@/components/chart/FileUploader";
@@ -109,12 +109,28 @@ export default function TableGenerator() {
     }
   };
 
+  const [fullscreen, setFullscreen] = useState(false);
+
   const TABS = [
     { id: "preview", label: "Forhåndsvisning", icon: Eye },
     { id: "export", label: "Eksport / API", icon: Code2 },
   ];
 
   return (
+    <>
+    {fullscreen && (
+      <div className="fixed inset-0 z-50 bg-background flex flex-col overflow-auto">
+        <div className="flex items-center justify-between px-6 py-3 border-b border-border bg-card sticky top-0">
+          <span className="font-semibold text-sm text-foreground">{config.title || "Tabell"}</span>
+          <button onClick={() => setFullscreen(false)} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
+            <X className="w-4 h-4 text-muted-foreground" />
+          </button>
+        </div>
+        <div className="flex-1 overflow-auto">
+          <TablePreview data={data} columns={columns} config={config} />
+        </div>
+      </div>
+    )}
     <div className="min-h-screen bg-background flex flex-col">
       <header className="sticky top-0 z-20 bg-card/80 backdrop-blur-md border-b border-border">
         <div className="max-w-[1600px] mx-auto px-4 md:px-6 h-14 flex items-center justify-between">
@@ -187,15 +203,23 @@ export default function TableGenerator() {
         {/* Right panel */}
         <main className="flex-1 min-w-0 flex flex-col gap-4">
           {data && (
-            <div className="flex items-center gap-1 p-1 bg-card rounded-xl border border-border w-fit shadow-sm">
-              {TABS.map(t => (
-                <button key={t.id} onClick={() => setActiveTab(t.id)}
-                  className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                    activeTab === t.id ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                  }`}>
-                  <t.icon className="w-3.5 h-3.5" />{t.label}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1 p-1 bg-card rounded-xl border border-border w-fit shadow-sm">
+                {TABS.map(t => (
+                  <button key={t.id} onClick={() => setActiveTab(t.id)}
+                    className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                      activeTab === t.id ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                    }`}>
+                    <t.icon className="w-3.5 h-3.5" />{t.label}
+                  </button>
+                ))}
+              </div>
+              {activeTab === "preview" && (
+                <button onClick={() => setFullscreen(true)}
+                  className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-lg hover:bg-card border border-transparent hover:border-border">
+                  <Maximize2 className="w-3.5 h-3.5" />Fullskjerm
                 </button>
-              ))}
+              )}
             </div>
           )}
 
@@ -224,5 +248,6 @@ export default function TableGenerator() {
         </main>
       </div>
     </div>
+    </>
   );
 }
