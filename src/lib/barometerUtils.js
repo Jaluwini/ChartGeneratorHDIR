@@ -94,20 +94,20 @@ export function buildBarometerConfig(config, data) {
     legendSymbol: "rectangle",
   }] : [];
 
-  // Series 2: per-row reference line — scatter with a vertical line marker at each row's norway value
-  // The marker is a tall vertical rectangle (1px wide, ~18px tall) rendered as a custom path
+  // Series 2: per-row reference line — scatter with "line" symbol (horizontal in normal chart = vertical in inverted)
   const refLineColor = referenceLineColor || "#cc0000";
   const refLineSeries = (colReference && hasRangeData) ? [{
     name: "Nasjonalt gjennomsnitt",
     type: "scatter",
     data: rows.map((r, xi) =>
-      r.reference !== null ? { x: xi, y: r.reference, tooltipData: r } : null
+      r.reference !== null ? { x: xi, y: r.reference } : null
     ),
     color: refLineColor,
     marker: {
-      symbol: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='3' height='22'><rect x='1' y='0' width='2' height='22' fill='${encodeURIComponent(refLineColor)}'/></svg>")`,
-      width: 3,
-      height: 22,
+      symbol: "line",
+      lineWidth: 2,
+      lineColor: refLineColor,
+      radius: 10,
     },
     showInLegend: true,
     enableMouseTracking: false,
