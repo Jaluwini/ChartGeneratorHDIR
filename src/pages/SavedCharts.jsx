@@ -7,6 +7,7 @@ import Highcharts from "highcharts";
 import HighchartsExporting from "highcharts/modules/exporting";
 import HighchartsExportData from "highcharts/modules/export-data";
 import HighchartsOfflineExporting from "highcharts/modules/offline-exporting";
+import BarometerChart from "@/components/barometer/BarometerChart";
 
 HighchartsExporting(Highcharts);
 HighchartsExportData(Highcharts);
@@ -34,36 +35,40 @@ function MiniChart({ hcConfig }) {
 }
 
 function FullscreenChart({ chart, onClose }) {
-  const containerRef = useRef(null);
-
-  useEffect(() => {
-    if (!containerRef.current || !chart.hc_config) return;
-    const chart_ = Highcharts.chart(containerRef.current, {
-      ...chart.hc_config,
-      chart: { ...chart.hc_config.chart, height: null, width: null, animation: false },
-      exporting: {
-        enabled: true,
-        buttons: {
-          contextButton: {
-            menuItems: ["downloadPNG", "downloadJPEG", "downloadSVG", "downloadPDF", "separator", "downloadCSV", "downloadXLS"]
-          }
-        }
-      }
-    });
-    return () => chart_.destroy();
-  }, [chart]);
-
   return (
-    <div className="fixed inset-0 z-50 bg-background flex flex-col">
+    <div className="fixed inset-0 z-50 bg-background flex flex-col overflow-auto">
       <div className="flex items-center justify-between px-6 py-3 border-b border-border bg-card">
         <span className="font-semibold text-sm text-foreground">{chart.title || "Uten tittel"}</span>
         <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8">
           <X className="w-4 h-4" />
         </Button>
       </div>
-      <div ref={containerRef} className="flex-1 p-6" />
+      {chart.chart_type === "barometer" && chart.hc_config ? (
+        <BarometerChart hcConfig={chart.hc_config} />
+      ) : (
+        <FullscreenRawChart chart={chart} />
+      )}
     </div>
   );
+}
+
+function FullscreenRawChart({ chart }) {
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    if (!containerRef.current || !chart.hc_config) return;
+    const c = Highcharts.chart(containerRef.current, {
+      ...chart.hc_config,
+      chart: { ...chart.hc_config.chart, height: null, width: null, animation: false },
+      exporting: {
+        enabled: true,
+        buttons: { contextButton: { menuItems: ["downloadPNG", "downloadJPEG", "downloadSVG", "downloadPDF", "separator", "downloadCSV", "downloadXLS"] } }
+      }
+    });
+    return () => c.destroy();
+  }, [chart]);
+
+  return <div ref={containerRef} className="flex-1 p-6" />;
 }
 
 function FolderBadge({ folder, onEdit }) {
