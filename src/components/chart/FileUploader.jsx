@@ -86,14 +86,15 @@ export default function FileUploader({ onDataLoaded }) {
           setError("Failed to parse JSON file. Make sure it is valid JSON.");
           return;
         }
-        // Support both array of objects and { data: [...] }
-        const rows = Array.isArray(parsed) ? parsed : Array.isArray(parsed?.data) ? parsed.data : null;
+        // Support both array of objects and { data: [...], config: {...} }
+        let rows = Array.isArray(parsed) ? parsed : Array.isArray(parsed?.data) ? parsed.data : null;
         if (!rows || rows.length === 0) {
           setError("JSON file must contain an array of objects.");
           return;
         }
         const columns = detectColumns(rows);
-        onDataLoaded({ data: rows, columns, fileName: file.name });
+        const chartConfig = parsed?.config;
+        onDataLoaded({ data: rows, columns, fileName: file.name, ...(chartConfig && { chartConfig }) });
       };
       reader.onerror = () => setError("Failed to read file.");
       reader.readAsText(file);

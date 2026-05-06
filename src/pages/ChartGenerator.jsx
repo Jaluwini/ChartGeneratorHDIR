@@ -51,21 +51,31 @@ export default function ChartGenerator() {
   const [selectedIndicator, setSelectedIndicator] = useState(null); // { id, tittel, jsonUrl }
   const chartRef = useRef(null);
 
-  const handleDataLoaded = useCallback(({ data: newData, columns: newCols, source, title, savedJsonUrl, savedMeasureType, savedEnhetType }) => {
+  const handleDataLoaded = useCallback(({ data: newData, columns: newCols, source, title, savedJsonUrl, savedMeasureType, savedEnhetType, chartConfig }) => {
     setData(newData);
     setColumns(newCols);
     if (source) setApiSource(source);
-    const suggested = suggestChartConfig(newCols);
-    setConfig((prev) => ({
-      ...prev,
-      xAxis: suggested.xAxis,
-      yAxes: suggested.yAxes,
-      chartType: suggested.chartType || prev.chartType,
-      // Don't overwrite title if it's locked to API (ApiFieldPicker handles it)
-      title: prev.titleFromApi ? prev.title : title || prev.title,
-      // Store API filter selections so getChart can rebuild from fresh data
-      ...(savedJsonUrl ? { savedJsonUrl, savedMeasureType, savedEnhetType } : {})
-    }));
+    
+    if (chartConfig) {
+      setConfig(prev => ({
+        ...DEFAULT_CONFIG,
+        ...chartConfig,
+        title: chartConfig.title || title || prev.title,
+      }));
+    } else {
+      const suggested = suggestChartConfig(newCols);
+      setConfig((prev) => ({
+        ...prev,
+        xAxis: suggested.xAxis,
+        yAxes: suggested.yAxes,
+        chartType: suggested.chartType || prev.chartType,
+        title: prev.titleFromApi ? prev.title : title || prev.title,
+      }));
+    }
+    
+    if (savedJsonUrl) {
+      setConfig(prev => ({ ...prev, savedJsonUrl, savedMeasureType, savedEnhetType }));
+    }
     setValidationError(null);
   }, []);
 
