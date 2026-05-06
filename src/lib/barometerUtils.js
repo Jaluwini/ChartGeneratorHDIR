@@ -170,13 +170,13 @@ export function buildBarometerConfig(config, data) {
         to: t.to,
         color: bandColors[i % 2],
         label: {
-          text: t.theme,
-          align: "left",
-          x: 5,
-          style: { fontSize: "9px", color: "#888", fontWeight: "600", textTransform: "uppercase" },
+          useHTML: true,
+          text: `<span style="display:inline-block;writing-mode:vertical-rl;transform:rotate(180deg);font-size:8px;color:#666;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;white-space:nowrap;">${t.theme}</span>`,
+          align: "right",
           verticalAlign: "middle",
+          x: -278,
         },
-        zIndex: 0,
+        zIndex: 1,
       });
     });
   }
