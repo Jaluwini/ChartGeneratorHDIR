@@ -298,7 +298,7 @@ export default function SavedCharts() {
                 <ArrowLeft className="w-3.5 h-3.5" />Tilbake
               </Button>
             </Link>
-            <Link to="/chart">
+            <Link to="/">
               <Button variant="ghost" size="sm" className="gap-1.5 text-xs h-8 text-muted-foreground hover:text-foreground hidden sm:flex">
                 Ny graf
               </Button>
