@@ -43,11 +43,15 @@ function FullscreenChart({ chart, onClose }) {
           <X className="w-4 h-4" />
         </Button>
       </div>
-      {chart.chart_type === "barometer" && chart.hc_config ? (
-        <BarometerChart hcConfig={chart.hc_config} />
-      ) : (
-        <FullscreenRawChart chart={chart} />
-      )}
+      <div className="overflow-x-auto">
+        <div className="min-w-[700px]">
+          {chart.chart_type === "barometer" && chart.hc_config ? (
+            <BarometerChart hcConfig={chart.hc_config} />
+          ) : (
+            <FullscreenRawChart chart={chart} />
+          )}
+        </div>
+      </div>
     </div>
   );
 }
