@@ -174,7 +174,7 @@ export function buildBarometerConfig(config, data) {
           text: `<span style="display:inline-block;writing-mode:vertical-rl;transform:rotate(180deg);font-size:8px;color:#666;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;white-space:nowrap;">${t.theme}</span>`,
           align: "right",
           verticalAlign: "middle",
-          x: -278,
+          x: -315,
         },
         zIndex: 1,
       });
@@ -202,7 +202,7 @@ export function buildBarometerConfig(config, data) {
       type: "scatter",
       inverted: true,
       height: height || Math.max(400, rows.length * 28 + 120),
-      marginLeft: 280,
+      marginLeft: 320,
       marginRight: 60,
       style: { fontFamily: "Inter, sans-serif" },
     },
