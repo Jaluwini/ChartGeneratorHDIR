@@ -300,7 +300,7 @@ export default function SavedCharts() {
             </Link>
             <Link to="/">
               <Button variant="ghost" size="sm" className="gap-1.5 text-xs h-8 text-muted-foreground hover:text-foreground hidden sm:flex">
-                Ny graf
+                Ny statistikkvisning
               </Button>
             </Link>
           </div>
