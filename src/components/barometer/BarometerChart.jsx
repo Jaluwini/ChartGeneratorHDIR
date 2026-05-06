@@ -9,7 +9,7 @@ HighchartsMore(Highcharts);
 HighchartsExporting(Highcharts);
 HighchartsOfflineExporting(Highcharts);
 
-export default function BarometerChart({ hcConfig, onChartReady }) {
+export default function BarometerChart({ hcConfig }) {
   const containerRef = useRef(null);
   const chartRef = useRef(null);
   const [error, setError] = useState(null);
@@ -43,7 +43,6 @@ export default function BarometerChart({ hcConfig, onChartReady }) {
         }
       });
       chartRef.current = chart;
-      if (onChartReady) onChartReady(chart);
     } catch (e) {
       setError(e.message);
     }

@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { BarChart3, BookMarked, Upload, RefreshCw, Save, Download, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,6 @@ import { base44 } from "@/api/base44Client";
 const DEFAULT_CONFIG = {
   title: "",
   subtitle: "",
-  // Column mapping
   colIndicator: "",
   colValue: "",
   colReference: "",
@@ -22,21 +21,16 @@ const DEFAULT_CONFIG = {
   colPeriod: "",
   colTheme: "",
   colColor: "",
-  // Display options
-  showTable: true,
   showReferenceBar: true,
-  referenceLineFixed: null, // null = per-row from colReference
-  // Color thresholds (relative to reference)
-  colorMode: "relative", // "relative" | "absolute" | "column"
-  thresholdGood: 5,      // % above reference = green
-  thresholdBad: -5,      // % below reference = red
+  referenceLineFixed: null,
+  colorMode: "relative",
+  thresholdGood: 5,
+  thresholdBad: -5,
   higherIsBetter: true,
-  // Colors
   colorGood: "#22c55e",
   colorNeutral: "#f59e0b",
   colorBad: "#ef4444",
   colorMissing: "#ffffff",
-  // Visual
   barColor: "#cccccc",
   referenceLineColor: "#cc0000",
   diamondSize: 8,
@@ -51,13 +45,10 @@ export default function BarometerGenerator() {
   const [config, setConfig] = useState(DEFAULT_CONFIG);
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
-  const chartRef = useRef(null);
 
   const handleDataLoaded = useCallback(({ data: d, columns: c }) => {
     setData(d);
     setColumns(c);
-    // Auto-detect columns
-    const names = c.map(col => col.name.toLowerCase());
     const find = (...keywords) => c.find(col => keywords.some(k => col.name.toLowerCase().includes(k)))?.name || "";
     setConfig(prev => ({
       ...prev,
@@ -81,7 +72,6 @@ export default function BarometerGenerator() {
     setData(null);
     setColumns([]);
     setConfig(DEFAULT_CONFIG);
-    chartRef.current = null;
   };
 
   const handleSave = async () => {
@@ -221,7 +211,7 @@ Forventet levealder kvinner,84.9,84.6,82.3,86.7,år,2018-2024,Helsestatus`;
                 animate={{ opacity: 1 }}
                 className="flex-1 bg-card rounded-2xl border border-border shadow-sm overflow-hidden"
               >
-                <BarometerChart hcConfig={hcConfig} onChartReady={(c) => { chartRef.current = c; }} />
+                <BarometerChart hcConfig={hcConfig} />
               </motion.div>
             ) : (
               <motion.div

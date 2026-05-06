@@ -1,29 +1,3 @@
-/**
- * Builds a Highcharts configuration for a "Folkehelsebarometer"-style chart.
- *
- * Expected config fields:
- *   colIndicator  - column name for indicator labels (y-axis categories)
- *   colValue      - column name for the focal region's value (diamond marker)
- *   colReference  - column name for national/reference value (red line per row, optional)
- *   colMin        - column name for min value across regions (left edge of gray bar, optional)
- *   colMax        - column name for max value across regions (right edge of gray bar, optional)
- *   colUnit       - column name for unit string (shown in tooltip, optional)
- *   colPeriod     - column name for period/year (shown in tooltip, optional)
- *   colTheme      - column name for theme grouping (shown as y-axis bands, optional)
- *   colorMode     - "relative" | "absolute" | "column"
- *     "relative"  : color diamond based on % diff from reference (thresholdGood / thresholdBad)
- *     "absolute"  : color diamond based on absolute diff from reference
- *     "column"    : use raw value from colColor column ("red","green","yellow","white")
- *   higherIsBetter - boolean (flips good/bad logic)
- *   thresholdGood  - % (or absolute) above reference → green
- *   thresholdBad   - % (or absolute) below reference → red (negative = below)
- *   colorGood / colorNeutral / colorBad / colorMissing
- *   barColor / referenceLineColor / diamondSize
- *   title / subtitle / decimals / valueSuffix
- *   showReferenceBar - boolean, show gray variation bar
- *   referenceLineFixed - null or number; if number, draw a single global plotLine at that x value
- */
-
 function clean(v) {
   if (v === null || v === undefined || v === "" || v === "-") return null;
   const s = String(v).replace(/[\s\u00a0]/g, "").replace(",", ".");
@@ -50,11 +24,6 @@ function getDiamondColor(value, reference, config) {
   if (effectiveDiff >= tGood) return config.colorGood || "#22c55e";
   if (effectiveDiff <= tBad) return config.colorBad || "#ef4444";
   return config.colorNeutral || "#f59e0b";
-}
-
-function formatVal(v, decimals, suffix) {
-  if (v === null || v === undefined) return "–";
-  return v.toFixed(decimals ?? 1) + (suffix ? " " + suffix : "");
 }
 
 export function buildBarometerConfig(config, data) {
