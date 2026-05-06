@@ -10,6 +10,7 @@ import ChartGenerator from './pages/ChartGenerator';
 import SavedCharts from './pages/SavedCharts';
 import ApiSettings from './pages/ApiSettings';
 import BarometerGenerator from './pages/BarometerGenerator';
+import TableGenerator from './pages/TableGenerator';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -38,6 +39,7 @@ const AuthenticatedApp = () => {
       <Route path="/saved" element={<SavedCharts />} />
       <Route path="/api-settings" element={<ApiSettings />} />
       <Route path="/barometer" element={<BarometerGenerator />} />
+      <Route path="/table" element={<TableGenerator />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );

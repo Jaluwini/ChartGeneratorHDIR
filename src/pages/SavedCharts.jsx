@@ -13,6 +13,33 @@ HighchartsExporting(Highcharts);
 HighchartsExportData(Highcharts);
 HighchartsOfflineExporting(Highcharts);
 
+function MiniTablePreview({ chart }) {
+  const config = chart.chart_config || {};
+  const rawData = config._rawData || [];
+  const rawColumns = config._columns || [];
+  if (!rawData.length) return <div className="h-[200px] bg-muted/40 rounded-lg flex items-center justify-center text-xs text-muted-foreground">Ingen data</div>;
+  const cols = rawColumns.slice(0, 5);
+  const rows = rawData.slice(0, 6);
+  return (
+    <div className="h-[200px] overflow-hidden rounded-lg border border-border">
+      <table className="w-full text-[10px]">
+        <thead>
+          <tr className="bg-muted/50 border-b border-border">
+            {cols.map(c => <th key={c.name} className="px-2 py-1.5 text-left font-medium text-muted-foreground truncate max-w-[80px]">{c.name}</th>)}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, i) => (
+            <tr key={i} className={`border-b border-border/40 ${i % 2 === 1 ? "bg-muted/10" : ""}`}>
+              {cols.map(c => <td key={c.name} className="px-2 py-1 text-foreground/70 truncate max-w-[80px]">{String(row[c.name] ?? "")}</td>)}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 function MiniChart({ hcConfig }) {
   const containerRef = useRef(null);
 
@@ -213,7 +240,9 @@ export default function SavedCharts() {
         />
       )}
       <div className="p-4 pb-2">
-        <MiniChart hcConfig={chart.hc_config} />
+        {chart.chart_type === "table"
+          ? <MiniTablePreview chart={chart} />
+          : <MiniChart hcConfig={chart.hc_config} />}
       </div>
       <div className="mx-4 mb-2 flex items-center gap-2 flex-wrap">
         {chart.exposed_in_api && (
@@ -259,7 +288,10 @@ export default function SavedCharts() {
             <Maximize2 className="w-4 h-4" />
           </Button>
           <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary"
-            onClick={() => { window.location.href = chart.chart_type === "barometer" ? `/barometer?load=${chart.id}` : `/?load=${chart.id}`; }} title="Åpne og rediger">
+            onClick={() => {
+              const path = chart.chart_type === "barometer" ? "/barometer" : chart.chart_type === "table" ? "/table" : "/chart";
+              window.location.href = `${path}?load=${chart.id}`;
+            }} title="Åpne og rediger">
             <Pencil className="w-4 h-4" />
           </Button>
           <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive"

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { BarChart3, Activity, BookMarked, Upload, Wifi, ArrowRight, ChevronLeft } from "lucide-react";
+import { BarChart3, Activity, BookMarked, Upload, Wifi, ArrowRight, ChevronLeft, Table2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const CARD_BASE = "relative cursor-pointer rounded-2xl border-2 p-6 flex flex-col gap-3 transition-all hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98]";
@@ -79,6 +79,13 @@ export default function CreateNew() {
                     description="Sammenlign kommunen eller fylket mot nasjonalt gjennomsnitt."
                     accent="bg-emerald-500/10 text-emerald-600"
                     onClick={() => navigate("/barometer")}
+                  />
+                  <OptionCard
+                    icon={Table2}
+                    title="Tabell"
+                    description="Presenter data som en ryddig, tilpassbar tabell."
+                    accent="bg-orange-500/10 text-orange-600"
+                    onClick={() => navigate("/table")}
                   />
                 </div>
               </motion.div>
