@@ -51,6 +51,7 @@ function drawThemeLabels(chart, themeSegments, rowCount) {
         rotation: 90,
         align: "center",
         zIndex: 5,
+        title: seg.theme, // native SVG tooltip on hover
       })
       .css({
         fontSize: "8px",
@@ -58,6 +59,7 @@ function drawThemeLabels(chart, themeSegments, rowCount) {
         color: "#9ca3af",
         letterSpacing: "0.1em",
         fontFamily: "Inter, sans-serif",
+        cursor: "default",
       })
       .add();
 
