@@ -86,20 +86,38 @@ export default function FileUploader({ onDataLoaded }) {
           setError("Failed to parse JSON file. Make sure it is valid JSON.");
           return;
         }
-        // Support multiple JSON structures: array, { data: [...] }, { rows: [...] }
+        // Support multiple JSON structures: array, { data: [...] }, { rows: [...] }, or Highcharts config
         let rows = null;
+        let chartConfig = null;
+        
         if (Array.isArray(parsed)) {
           rows = parsed;
         } else if (parsed && typeof parsed === 'object') {
+          // Try direct data/rows first
           rows = Array.isArray(parsed.data) ? parsed.data : Array.isArray(parsed.rows) ? parsed.rows : null;
+          chartConfig = parsed.config;
+          
+          // If no rows found, try to extract from Highcharts series format
+          if (!rows && parsed.series && Array.isArray(parsed.series) && parsed.series.length > 0) {
+            const firstSeries = parsed.series[0];
+            if (Array.isArray(firstSeries.data) && firstSeries.data.length > 0) {
+              rows = firstSeries.data;
+              // Extract basic Highcharts config
+              chartConfig = {
+                title: parsed.title?.text || "",
+                subtitle: parsed.subtitle?.text || "",
+                xAxisTitle: parsed.xAxis?.title?.text || "",
+                yAxisTitle: parsed.yAxis?.title?.text || "",
+              };
+            }
+          }
         }
         
         if (!rows || rows.length === 0) {
-          setError("JSON file must be an array of objects or contain a 'data' or 'rows' field with an array.");
+          setError("JSON file must be an array of objects, have 'data'/'rows' field, or be a Highcharts config with series data.");
           return;
         }
         const columns = detectColumns(rows);
-        const chartConfig = parsed?.config;
         onDataLoaded({ data: rows, columns, fileName: file.name, ...(chartConfig && { chartConfig }) });
       };
       reader.onerror = () => setError("Failed to read file.");
