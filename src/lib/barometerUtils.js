@@ -147,6 +147,7 @@ export function buildBarometerConfig(config, data) {
 
   // Theme plotBands on xAxis (vertical axis after inversion)
   const xPlotBands = [];
+  const themeSegments = [];
   if (colTheme) {
     const themes = [];
     let currentTheme = null;
@@ -154,30 +155,38 @@ export function buildBarometerConfig(config, data) {
     rows.forEach((r, i) => {
       if (r.theme !== currentTheme) {
         if (currentTheme !== null) {
-          themes.push({ theme: currentTheme, from: startIdx - 0.5, to: i - 0.5 });
+          themes.push({ theme: currentTheme, from: startIdx - 0.5, to: i - 0.5, midpoint: (startIdx + i - 1) / 2 });
         }
         currentTheme = r.theme;
         startIdx = i;
       }
     });
     if (currentTheme !== null) {
-      themes.push({ theme: currentTheme, from: startIdx - 0.5, to: rows.length - 0.5 });
+      themes.push({ theme: currentTheme, from: startIdx - 0.5, to: rows.length - 0.5, midpoint: (startIdx + rows.length - 1) / 2 });
     }
     const bandColors = ["#f8f9fa", "#ffffff"];
     themes.forEach((t, i) => {
-      xPlotBands.push({
-        from: t.from,
-        to: t.to,
-        color: bandColors[i % 2],
-        label: {
-          useHTML: true,
-          text: `<span style="display:inline-block;writing-mode:vertical-rl;transform:rotate(180deg);font-size:8px;color:#555;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;white-space:nowrap;">${t.theme}</span>`,
-          align: "left",
-          verticalAlign: "middle",
-          x: 8,
+    themeSegments.push(t);
+    xPlotBands.push({
+      from: t.from,
+      to: t.to,
+      color: bandColors[i % 2],
+      label: {
+        text: t.theme,
+        align: "right",
+        verticalAlign: "middle",
+        x: 130,
+        style: {
+          fontSize: "9px",
+          fontWeight: "700",
+          color: "#6b7280",
+          textTransform: "uppercase",
+          letterSpacing: "0.06em",
+          whiteSpace: "nowrap",
         },
-        zIndex: 1,
-      });
+      },
+      zIndex: 1,
+    });
     });
   }
 
@@ -197,13 +206,16 @@ export function buildBarometerConfig(config, data) {
     });
   }
 
+  const hasThemes = themeSegments.length > 0;
+  const marginRight = hasThemes ? 140 : 60;
+
   return {
     chart: {
       type: "scatter",
       inverted: true,
       height: height || Math.max(400, rows.length * 28 + 120),
       marginLeft: 320,
-      marginRight: 80,
+      marginRight,
       style: { fontFamily: "Inter, sans-serif" },
     },
     title: { text: title || "", style: { fontSize: "15px", fontWeight: "600" } },
