@@ -297,10 +297,14 @@ export function buildHighchartsConfig(config, data) {
            shared: true,
            formatter: function() {
              let s = `<span style="font-size:11px">${this.x}</span><br/>`;
-             const total = this.points.reduce((sum, pt) => sum + (pt.y || 0), 0);
+             const total = config.showPercentage ? this.points.reduce((sum, pt) => sum + (pt.y || 0), 0) : 0;
              this.points.forEach(pt => {
-               const pct = total > 0 ? ((pt.y / total) * 100).toFixed(1) : 0;
-               s += `<span style="color:${pt.color}">●</span> ${pt.series.name}: <b>${fmtTooltip(pt.y)}</b> (${pct}%)<br/>`;
+               let text = `<span style="color:${pt.color}">●</span> ${pt.series.name}: <b>${fmtTooltip(pt.y)}</b>`;
+               if (config.showPercentage && total > 0) {
+                 const pct = ((pt.y / total) * 100).toFixed(1);
+                 text += ` (${pct}%)`;
+               }
+               s += text + '<br/>';
              });
              return s;
            }

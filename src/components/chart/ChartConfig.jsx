@@ -308,9 +308,10 @@ export default function ChartConfig({ config, onChange, columns, hideLabels = fa
       </Section>
 
       {/* Display */}
-      <Section title="Visningsalternativer">
-        <SwitchField label="Dataetiketter" value={config.dataLabels} onChange={v => set("dataLabels", v)} />
-        <SwitchField label="Tegnforklaring" value={config.legend !== false} onChange={v => set("legend", v)} />
+       <Section title="Visningsalternativer">
+         <SwitchField label="Dataetiketter" value={config.dataLabels} onChange={v => set("dataLabels", v)} />
+         <SwitchField label="Tegnforklaring" value={config.legend !== false} onChange={v => set("legend", v)} />
+         <SwitchField label="Vis prosent i tooltip" value={config.showPercentage} onChange={v => set("showPercentage", v)} />
         <SelectField
           label="Sorter data"
           value={config.sortData || "none"}
