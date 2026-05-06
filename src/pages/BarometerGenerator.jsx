@@ -56,9 +56,16 @@ export default function BarometerGenerator() {
       if (!saved || saved.chart_type !== "barometer") return;
       setSavedChartId(saved.id);
       if (saved.chart_config) {
-        setConfig(saved.chart_config);
+        const { _rawData, _columns, ...cleanConfig } = saved.chart_config;
+        setConfig(cleanConfig);
+        // Restore raw data from chart_config (new format)
+        if (_rawData && _columns) {
+          setData(_rawData);
+          setColumns(_columns);
+          return;
+        }
       }
-      // Try to restore raw data rows from source_name (new format)
+      // Legacy fallback: try source_name JSON
       if (saved.source_name) {
         try {
           const parsed = JSON.parse(saved.source_name);
@@ -67,28 +74,22 @@ export default function BarometerGenerator() {
             setColumns(parsed.columns);
             return;
           }
-        } catch (_) { /* fall through to legacy reconstruction */ }
+        } catch (_) { /* ignore */ }
       }
-      // Legacy fallback: reconstruct columns from chart_config field names
-      if (saved.chart_config) {
-        const colNames = [
-          saved.chart_config.colIndicator,
-          saved.chart_config.colValue,
-          saved.chart_config.colReference,
-          saved.chart_config.colMin,
-          saved.chart_config.colMax,
-          saved.chart_config.colUnit,
-          saved.chart_config.colPeriod,
-          saved.chart_config.colTheme,
-          saved.chart_config.colColor,
-        ].filter(Boolean);
-        const uniqueCols = [...new Set(colNames)].map(name => ({ name, type: "string" }));
-        setColumns(uniqueCols);
-        // Use hc_config categories as a minimal data placeholder so config panel shows
+      // Last resort: reconstruct minimal data from hc_config so config panel appears
+      if (saved.chart_config && saved.hc_config) {
         const categories = saved.hc_config?.xAxis?.categories || [];
         const rows = categories.map((cat) => ({
           [saved.chart_config.colIndicator || "indikator"]: cat,
         }));
+        const colNames = [
+          saved.chart_config.colIndicator, saved.chart_config.colValue,
+          saved.chart_config.colReference, saved.chart_config.colMin,
+          saved.chart_config.colMax, saved.chart_config.colUnit,
+          saved.chart_config.colPeriod, saved.chart_config.colTheme,
+          saved.chart_config.colColor,
+        ].filter(Boolean);
+        setColumns([...new Set(colNames)].map(name => ({ name, type: "string" })));
         setData(rows);
       }
     });
@@ -130,10 +131,8 @@ export default function BarometerGenerator() {
       const payload = {
         title: config.title,
         hc_config: hcConfig,
-        chart_config: config,
+        chart_config: { ...config, _rawData: data, _columns: columns },
         chart_type: "barometer",
-        // Store raw data rows so we can restore the editor perfectly
-        source_name: JSON.stringify({ rows: data, columns }),
       };
       if (savedChartId) {
         await base44.entities.SavedChart.update(savedChartId, payload);
