@@ -86,10 +86,16 @@ export default function FileUploader({ onDataLoaded }) {
           setError("Failed to parse JSON file. Make sure it is valid JSON.");
           return;
         }
-        // Support both array of objects and { data: [...], config: {...} }
-        let rows = Array.isArray(parsed) ? parsed : Array.isArray(parsed?.data) ? parsed.data : null;
+        // Support multiple JSON structures: array, { data: [...] }, { rows: [...] }
+        let rows = null;
+        if (Array.isArray(parsed)) {
+          rows = parsed;
+        } else if (parsed && typeof parsed === 'object') {
+          rows = Array.isArray(parsed.data) ? parsed.data : Array.isArray(parsed.rows) ? parsed.rows : null;
+        }
+        
         if (!rows || rows.length === 0) {
-          setError("JSON file must contain an array of objects.");
+          setError("JSON file must be an array of objects or contain a 'data' or 'rows' field with an array.");
           return;
         }
         const columns = detectColumns(rows);
