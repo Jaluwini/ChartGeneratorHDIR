@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Download, Copy, Check, FileJson, FileCode2, Globe } from "lucide-react";
+import { Download, Copy, Check, FileJson, FileCode2, Globe, Link as LinkIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { base44 } from "@/api/base44Client";
 
 function buildHtml(data, columns, config) {
   const visibleCols = config.visibleColumns
@@ -103,6 +104,23 @@ function downloadFile(content, filename, type) {
 export default function TableExportPanel({ data, columns, config, savedChartId }) {
   const [activeTab, setActiveTab] = useState("json");
 
+  const downloadTableHTML = async () => {
+    if (!savedChartId) return;
+    try {
+      const res = await base44.functions.invoke('renderTable', { id: savedChartId, format: 'download' });
+      const html = res.data;
+      const blob = new Blob([html], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${config.title || 'tabell'}.html`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      alert('Feil ved nedlasting: ' + err.message);
+    }
+  };
+
   if (!data) return <div className="p-6 text-sm text-muted-foreground">Last opp data for å se eksportalternativer.</div>;
 
   const jsonOutput = buildJsonOutput(data, columns, config);
@@ -112,6 +130,7 @@ export default function TableExportPanel({ data, columns, config, savedChartId }
   const TABS = [
     { id: "json", label: "JSON", icon: FileJson },
     { id: "html", label: "HTML", icon: FileCode2 },
+    { id: "embed", label: "Embed", icon: LinkIcon },
     { id: "api", label: "API", icon: Globe },
   ];
 
@@ -173,6 +192,50 @@ export default function TableExportPanel({ data, columns, config, savedChartId }
           <pre className="flex-1 overflow-auto rounded-xl bg-muted/50 p-4 text-[11px] font-mono text-foreground/80 whitespace-pre-wrap min-h-[300px]">
             {htmlOutput}
           </pre>
+        </div>
+      )}
+
+      {activeTab === "embed" && (
+        <div className="flex flex-col gap-4">
+          {!savedChartId ? (
+            <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-sm text-amber-800">
+              Lagre tabellen først for å få en embed-URL.
+            </div>
+          ) : (
+            <>
+              <p className="text-xs text-muted-foreground">
+                Bruk en av disse metodene for å embedde tabellen i ditt CMS.
+              </p>
+              <div className="space-y-3">
+                <div>
+                  <span className="text-xs font-medium text-muted-foreground block mb-1.5">1. Last ned HTML-fil</span>
+                  <button
+                    onClick={() => downloadTableHTML()}
+                    className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                  >
+                    <Download className="w-3.5 h-3.5" />Last ned HTML
+                  </button>
+                  <p className="text-[11px] text-muted-foreground mt-1.5">Laster ned en selvstendig HTML-fil med all styling og funksjonalitet. Kopier innholdet direkte inn i CMS-et ditt.</p>
+                </div>
+
+                <div className="border-t border-border pt-3">
+                  <span className="text-xs font-medium text-muted-foreground block mb-1.5">2. Hent HTML via API</span>
+                  <div className="space-y-1.5">
+                    <p className="text-[11px] text-muted-foreground">Kall denne URL-en for å få den genererte HTML-en.</p>
+                    <div className="flex items-center gap-2">
+                      <code className="flex-1 text-[11px] bg-muted/50 rounded-lg px-3 py-2 font-mono text-foreground/80 overflow-auto break-all">
+                        {`${window.location.origin}/api/functions/renderTable?id=${savedChartId}`}
+                      </code>
+                      <CopyButton text={`${window.location.origin}/api/functions/renderTable?id=${savedChartId}`} label="Kopier" />
+                    </div>
+                  </div>
+                  <pre className="text-[11px] bg-muted/50 rounded-lg px-3 py-2.5 font-mono text-foreground/80 overflow-auto mt-2">{`const res = await fetch("${window.location.origin}/api/functions/renderTable?id=${savedChartId}");
+const { html } = await res.json();
+// html inneholder komplett HTML med styling og JavaScript`}</pre>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       )}
 
