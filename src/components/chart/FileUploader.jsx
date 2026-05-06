@@ -102,12 +102,18 @@ export default function FileUploader({ onDataLoaded }) {
             const firstSeries = parsed.series[0];
             if (Array.isArray(firstSeries.data) && firstSeries.data.length > 0) {
               rows = firstSeries.data;
-              // Extract basic Highcharts config
+              // Detect xAxis from categories or first object key, yAxes from series names
+              const xAxisField = parsed.xAxis?.title?.text || Object.keys(rows[0])?.[0] || "x";
+              const yAxesFields = parsed.series.map(s => s.name || "y");
+              
               chartConfig = {
+                xAxis: xAxisField,
+                yAxes: yAxesFields,
                 title: parsed.title?.text || "",
                 subtitle: parsed.subtitle?.text || "",
                 xAxisTitle: parsed.xAxis?.title?.text || "",
                 yAxisTitle: parsed.yAxis?.title?.text || "",
+                chartType: parsed.chart?.type || "line",
               };
             }
           }
