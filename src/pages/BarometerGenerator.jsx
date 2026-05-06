@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { BarChart3, BookMarked, Upload, RefreshCw, Save, Download, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -45,6 +45,55 @@ export default function BarometerGenerator() {
   const [config, setConfig] = useState(DEFAULT_CONFIG);
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [savedChartId, setSavedChartId] = useState(null);
+
+  // Load saved barometer from ?load= URL param
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const loadId = params.get("load");
+    if (!loadId) return;
+    base44.entities.SavedChart.get(loadId).then((saved) => {
+      if (!saved || saved.chart_type !== "barometer") return;
+      setSavedChartId(saved.id);
+      if (saved.chart_config) {
+        setConfig(saved.chart_config);
+      }
+      // Reconstruct data rows from hc_config so the config panel becomes visible
+      if (saved.hc_config && saved.chart_config) {
+        const hc = saved.hc_config;
+        const categories = hc.xAxis?.categories || [];
+        const series = hc.series || [];
+        // Build rows: one row per category
+        const rows = categories.map((cat, i) => {
+          const row = { [saved.chart_config.colIndicator || "indikator"]: cat };
+          series.forEach((s) => {
+            if (s.data) {
+              const pt = s.data.find(d => d && d.x === i);
+              if (pt && saved.chart_config.colValue) {
+                row[saved.chart_config.colValue] = pt.y ?? null;
+              }
+            }
+          });
+          return row;
+        });
+        // Derive columns from chart_config field names
+        const colNames = [
+          saved.chart_config.colIndicator,
+          saved.chart_config.colValue,
+          saved.chart_config.colReference,
+          saved.chart_config.colMin,
+          saved.chart_config.colMax,
+          saved.chart_config.colUnit,
+          saved.chart_config.colPeriod,
+          saved.chart_config.colTheme,
+          saved.chart_config.colColor,
+        ].filter(Boolean);
+        const uniqueCols = [...new Set(colNames)].map(name => ({ name, type: "string" }));
+        setData(rows);
+        setColumns(uniqueCols);
+      }
+    });
+  }, []);
 
   const handleDataLoaded = useCallback(({ data: d, columns: c }) => {
     setData(d);
@@ -72,18 +121,29 @@ export default function BarometerGenerator() {
     setData(null);
     setColumns([]);
     setConfig(DEFAULT_CONFIG);
+    setSavedChartId(null);
   };
 
   const handleSave = async () => {
     if (!hcConfig || !config.title?.trim()) return;
     setSaving(true);
     try {
-      await base44.entities.SavedChart.create({
-        title: config.title,
-        hc_config: hcConfig,
-        chart_config: config,
-        chart_type: "barometer",
-      });
+      if (savedChartId) {
+        await base44.entities.SavedChart.update(savedChartId, {
+          title: config.title,
+          hc_config: hcConfig,
+          chart_config: config,
+          chart_type: "barometer",
+        });
+      } else {
+        const created = await base44.entities.SavedChart.create({
+          title: config.title,
+          hc_config: hcConfig,
+          chart_config: config,
+          chart_type: "barometer",
+        });
+        setSavedChartId(created.id);
+      }
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 2500);
     } catch (err) {
