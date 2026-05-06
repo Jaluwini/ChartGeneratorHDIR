@@ -192,6 +192,8 @@ export function buildBarometerConfig(config, data) {
 
   // Reference plotLine on yAxis (horizontal value axis)
   const yPlotLines = [];
+
+  // Fixed reference line
   if (referenceLineFixed !== null && referenceLineFixed !== undefined && referenceLineFixed !== "") {
     yPlotLines.push({
       value: parseFloat(referenceLineFixed),
@@ -204,6 +206,28 @@ export function buildBarometerConfig(config, data) {
         style: { color: referenceLineColor || "#cc0000", fontSize: "10px" },
       },
     });
+  }
+
+  // Auto midtstrek: median of reference values when colReference is set and no fixed line
+  if (colReference && (referenceLineFixed === null || referenceLineFixed === undefined || referenceLineFixed === "")) {
+    const refVals = rows.map(r => r.reference).filter(v => v !== null);
+    if (refVals.length > 0) {
+      const sorted = [...refVals].sort((a, b) => a - b);
+      const mid = Math.floor(sorted.length / 2);
+      const medianRef = sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+      yPlotLines.push({
+        value: medianRef,
+        color: referenceLineColor || "#cc0000",
+        width: 1.5,
+        dashStyle: "ShortDash",
+        zIndex: 4,
+        label: {
+          text: `Ref. (${medianRef.toFixed(decimals ?? 1)}${valueSuffix ? " " + valueSuffix : ""})`,
+          align: "left",
+          style: { color: referenceLineColor || "#cc0000", fontSize: "9px" },
+        },
+      });
+    }
   }
 
   const hasThemes = themeSegments.length > 0;
@@ -233,6 +257,7 @@ export function buildBarometerConfig(config, data) {
       },
       lineWidth: 0,
       tickLength: 0,
+      tickInterval: 1,
       reversed: false,
     },
     // yAxis = horizontal after inversion → shows numeric values
