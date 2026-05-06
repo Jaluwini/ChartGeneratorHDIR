@@ -11,6 +11,7 @@ export const CHART_TYPES = [
   { value: "pie", label: "Pie" },
   { value: "scatter", label: "Scatter" },
   { value: "column_stacked", label: "Stacked Column" },
+  { value: "line_column", label: "Line + Column" },
 ];
 
 function cleanNumeric(v) {
@@ -124,8 +125,9 @@ export function buildHighchartsConfig(config, data) {
   if (!data || data.length === 0) return null;
   if (!xAxis || !yAxes || yAxes.length === 0) return null;
 
-  const actualType = chartType === "column_stacked" ? "column" : chartType;
+  const actualType = chartType === "column_stacked" ? "column" : chartType === "line_column" ? "column" : chartType;
   const isStacked = chartType === "column_stacked";
+  const isLineColumn = chartType === "line_column";
   const isPie = chartType === "pie";
 
   let workingData = [...data];
@@ -234,16 +236,22 @@ export function buildHighchartsConfig(config, data) {
       };
     });
   } else {
-    series = yAxes.map((yCol, yi) => ({
-      name: yCol,
-      type: actualType,
-      data: workingData.map(row => cleanNumeric(row[yCol]) || 0),
-      dataLabels: {
-        enabled: dataLabels === true,
-        formatter: function() { return fmt(this.y); }
-      },
-      color: themeColors[yi % themeColors.length]
-    }));
+    series = yAxes.map((yCol, yi) => {
+      let serieType = actualType;
+      if (isLineColumn) {
+        serieType = config.serieTypes?.[yCol] || "column";
+      }
+      return {
+        name: yCol,
+        type: serieType,
+        data: workingData.map(row => cleanNumeric(row[yCol]) || 0),
+        dataLabels: {
+          enabled: dataLabels === true,
+          formatter: function() { return fmt(this.y); }
+        },
+        color: themeColors[yi % themeColors.length]
+      };
+    });
   }
 
   const hcConfig = {

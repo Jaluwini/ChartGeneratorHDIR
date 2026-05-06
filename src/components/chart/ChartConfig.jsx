@@ -173,6 +173,57 @@ export default function ChartConfig({ config, onChange, columns, hideLabels = fa
             options={[{ value: "none", label: "— Ingen —" }, ...allColOptions]}
           />
         )}
+
+        {config.chartType === "line_column" && (
+          <div className="space-y-1.5">
+            <Label className="text-xs text-muted-foreground">Velg type for hver serie</Label>
+            {(config.yAxes || []).map((col, i) => (
+              <div key={i} className="flex gap-2 items-center">
+                <span className="text-xs text-foreground flex-1">{col}</span>
+                <div className="flex rounded-lg border border-border overflow-hidden">
+                  <button
+                    onClick={() => {
+                      const serieTypes = config.serieTypes || {};
+                      if (serieTypes[col] === "column") {
+                        const updated = { ...serieTypes };
+                        delete updated[col];
+                        set("serieTypes", Object.keys(updated).length > 0 ? updated : null);
+                      } else {
+                        set("serieTypes", { ...serieTypes, [col]: "column" });
+                      }
+                    }}
+                    className={`px-2.5 py-1 text-xs font-medium transition-colors ${
+                      config.serieTypes?.[col] === "column"
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:bg-muted"
+                    }`}
+                  >
+                    Søyle
+                  </button>
+                  <button
+                    onClick={() => {
+                      const serieTypes = config.serieTypes || {};
+                      if (serieTypes[col] === "line") {
+                        const updated = { ...serieTypes };
+                        delete updated[col];
+                        set("serieTypes", Object.keys(updated).length > 0 ? updated : null);
+                      } else {
+                        set("serieTypes", { ...serieTypes, [col]: "line" });
+                      }
+                    }}
+                    className={`px-2.5 py-1 text-xs font-medium transition-colors ${
+                      config.serieTypes?.[col] === "line"
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:bg-muted"
+                    }`}
+                  >
+                    Linje
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </Section>
 
       {/* Labels */}
