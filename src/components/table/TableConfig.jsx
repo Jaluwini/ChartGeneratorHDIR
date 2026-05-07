@@ -198,36 +198,54 @@ export default function TableConfig({ config, onChange, columns }) {
 
       {/* Fotnoter og kilder */}
       <Section title="Fotnoter og kilder" defaultOpen={false}>
-        <p className="text-[11px] text-muted-foreground mb-2">Legg til fotnoter som vises under tabellen.</p>
-        <div className="space-y-2 max-h-48 overflow-y-auto">
-          {(config.footnotes || []).map((note, idx) => (
-            <div key={idx} className="flex gap-2 items-start p-2 rounded-lg bg-muted/30 group">
-              <span className="text-xs font-mono text-muted-foreground flex-shrink-0 mt-0.5">{idx + 1}.</span>
-              <input
-                type="text"
-                value={note}
-                onChange={(e) => {
-                  const newNotes = [...(config.footnotes || [])];
-                  newNotes[idx] = e.target.value;
-                  set("footnotes", newNotes);
-                }}
-                className="flex-1 text-xs px-2 py-1 rounded border border-transparent hover:border-border focus:border-ring bg-transparent focus:bg-background outline-none"
-                placeholder="Skriv fotnote..."
-              />
-              <button
-                onClick={() => {
-                  const newNotes = (config.footnotes || []).filter((_, i) => i !== idx);
-                  set("footnotes", newNotes);
-                }}
-                className="opacity-0 group-hover:opacity-100 p-1 hover:bg-destructive/20 rounded transition-all text-destructive flex-shrink-0"
-              >
-                <Trash2Icon className="w-3 h-3" />
-              </button>
-            </div>
-          ))}
+        <p className="text-[11px] text-muted-foreground mb-2">
+          Legg til fotnoter og knytt dem til ord i tabellen via nøkkelord. Celler som inneholder nøkkelordet vil få en ¹ ² ³ referanse.
+        </p>
+        <div className="space-y-2 max-h-64 overflow-y-auto">
+          {(config.footnotes || []).map((fn, idx) => {
+            const note = typeof fn === "string" ? { text: fn, keyword: "" } : fn;
+            const updateNote = (field, val) => {
+              const newNotes = (config.footnotes || []).map((n, i) => {
+                if (i !== idx) return n;
+                const current = typeof n === "string" ? { text: n, keyword: "" } : { ...n };
+                return { ...current, [field]: val };
+              });
+              set("footnotes", newNotes);
+            };
+            return (
+              <div key={idx} className="flex flex-col gap-1.5 p-2 rounded-lg bg-muted/30 group border border-transparent hover:border-border transition-colors">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-mono text-muted-foreground flex-shrink-0 w-4">{idx + 1}.</span>
+                  <input
+                    type="text"
+                    value={note.text}
+                    onChange={e => updateNote("text", e.target.value)}
+                    className="flex-1 text-xs px-2 py-1 rounded border border-transparent hover:border-border focus:border-ring bg-transparent focus:bg-background outline-none"
+                    placeholder="Fotnote-tekst…"
+                  />
+                  <button
+                    onClick={() => set("footnotes", (config.footnotes || []).filter((_, i) => i !== idx))}
+                    className="opacity-0 group-hover:opacity-100 p-1 hover:bg-destructive/20 rounded transition-all text-destructive flex-shrink-0"
+                  >
+                    <Trash2Icon className="w-3 h-3" />
+                  </button>
+                </div>
+                <div className="flex items-center gap-2 pl-6">
+                  <span className="text-[10px] text-muted-foreground flex-shrink-0">Nøkkelord:</span>
+                  <input
+                    type="text"
+                    value={note.keyword || ""}
+                    onChange={e => updateNote("keyword", e.target.value)}
+                    className="flex-1 text-[11px] px-2 py-0.5 rounded border border-border bg-background outline-none focus:ring-1 focus:ring-ring font-mono"
+                    placeholder="f.eks. Fastleger"
+                  />
+                </div>
+              </div>
+            );
+          })}
         </div>
         <button
-          onClick={() => set("footnotes", [...(config.footnotes || []), ""])}
+          onClick={() => set("footnotes", [...(config.footnotes || []), { text: "", keyword: "" }])}
           className="w-full mt-2 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/10 rounded-lg border border-primary/30 transition-colors"
         >
           + Legg til fotnote

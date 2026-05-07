@@ -10,6 +10,38 @@ function getCfColor(value, config) {
   return config.cfMidColor || "#fef9c3";
 }
 
+function renderCellWithFootnotes(value, footnotes) {
+  if (!footnotes || footnotes.length === 0) return String(value ?? "");
+  const text = String(value ?? "");
+  // Build list of [keyword, footnoteIndex] sorted by keyword length desc to avoid partial matches
+  const refs = footnotes
+    .map((fn, idx) => ({ keyword: (typeof fn === "string" ? "" : fn.keyword || ""), idx }))
+    .filter(r => r.keyword && text.includes(r.keyword))
+    .sort((a, b) => b.keyword.length - a.keyword.length);
+
+  if (refs.length === 0) return text;
+
+  // Replace keywords with <keyword><sup>N</sup> using a simple split approach
+  const superscripts = ["¹","²","³","⁴","⁵","⁶","⁷","⁸","⁹"];
+  let parts = [text];
+  const usedKeywords = new Set();
+  for (const ref of refs) {
+    if (usedKeywords.has(ref.keyword)) continue;
+    usedKeywords.add(ref.keyword);
+    const sup = superscripts[ref.idx] || `(${ref.idx + 1})`;
+    parts = parts.flatMap(part => {
+      if (typeof part !== "string") return [part];
+      const split = part.split(ref.keyword);
+      return split.flatMap((s, i) =>
+        i < split.length - 1
+          ? [s, <span key={`${ref.keyword}-${i}`}>{ref.keyword}<sup className="text-primary font-semibold">{sup}</sup></span>]
+          : [s]
+      );
+    });
+  }
+  return parts;
+}
+
 export default function TablePreview({ data, columns, config = {} }) {
   const [sortCol, setSortCol] = useState(null);
   const [sortDir, setSortDir] = useState("asc");
@@ -190,7 +222,7 @@ export default function TablePreview({ data, columns, config = {} }) {
                           overflowWrap: config.nowrap ? "break-word" : "normal",
                         }}
                       >
-                        {String(val ?? "")}
+                        {renderCellWithFootnotes(val, config.footnotes)}
                       </td>
                     );
                   })}
@@ -223,11 +255,19 @@ export default function TablePreview({ data, columns, config = {} }) {
       {/* Footnotes */}
       {config.footnotes && config.footnotes.length > 0 && (
         <div className="px-4 py-3 border-t space-y-1.5" style={{ borderColor, background: `${tableBg}e8` }}>
-          {config.footnotes.map((note, idx) => (
-            <div key={idx} className="text-xs text-muted-foreground">
-              <span className="font-mono">{idx + 1}.</span> {note}
-            </div>
-          ))}
+          {(() => {
+            const superscripts = ["¹","²","³","⁴","⁵","⁶","⁷","⁸","⁹"];
+            return config.footnotes.map((fn, idx) => {
+              const text = typeof fn === "string" ? fn : fn.text;
+              const sup = superscripts[idx] || `(${idx + 1})`;
+              if (!text) return null;
+              return (
+                <div key={idx} className="text-xs text-muted-foreground">
+                  <sup className="text-primary font-semibold mr-1">{sup}</sup>{text}
+                </div>
+              );
+            });
+          })()}
         </div>
       )}
     </div>
