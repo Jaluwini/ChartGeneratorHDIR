@@ -139,6 +139,25 @@ export default function TableConfig({ config, onChange, columns }) {
         </div>
       </Section>
 
+      {/* Overskriftsrader og -kolonner */}
+      <Section title="Overskriftsrader og -kolonner" defaultOpen={false}>
+        <p className="text-[11px] text-muted-foreground">Marker de første radene og/eller kolonnene som overskrifter med header-stil.</p>
+        <div className="space-y-1">
+          <Label className="text-xs text-muted-foreground">Antall overskriftsrader (fra data)</Label>
+          <select value={config.headerRows || 0} onChange={e => set("headerRows", parseInt(e.target.value))}
+            className="w-full rounded-lg border border-input bg-background text-sm px-2.5 py-1.5 outline-none focus:ring-1 focus:ring-ring">
+            {[0,1,2,3,4,5].map(n => <option key={n} value={n}>{n === 0 ? "Ingen (standard)" : n}</option>)}
+          </select>
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs text-muted-foreground">Antall overskriftskolonner</Label>
+          <select value={config.headerCols || 0} onChange={e => set("headerCols", parseInt(e.target.value))}
+            className="w-full rounded-lg border border-input bg-background text-sm px-2.5 py-1.5 outline-none focus:ring-1 focus:ring-ring">
+            {[0,1,2,3].map(n => <option key={n} value={n}>{n === 0 ? "Ingen" : n}</option>)}
+          </select>
+        </div>
+      </Section>
+
       {/* Visning */}
       <Section title="Layout og visning">
        <Toggle label="Stripete rader" value={config.striped !== false} onChange={v => set("striped", v)} />

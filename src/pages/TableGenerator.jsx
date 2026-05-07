@@ -46,6 +46,8 @@ const DEFAULT_CONFIG = {
   cfLowColor: "#fee2e2",
   footnotes: [],
   merges: [],
+  headerRows: 0,
+  headerCols: 0,
 };
 
 export default function TableGenerator() {

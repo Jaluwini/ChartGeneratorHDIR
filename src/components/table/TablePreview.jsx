@@ -97,6 +97,8 @@ export default function TablePreview({ data, columns, config = {} }) {
   const totalPages = pageSize > 0 ? Math.ceil(filtered.length / pageSize) : 1;
   const displayRows = pageSize > 0 ? filtered.slice(page * pageSize, (page + 1) * pageSize) : filtered;
 
+  const headerRows = config.headerRows || 0;
+  const headerCols = config.headerCols || 0;
   const headerBg = config.headerBg || "#f4f4f5";
   const headerText = config.headerText || "#111827";
   const stripedColor = config.stripedColor || "#f9fafb";
@@ -207,23 +209,28 @@ export default function TablePreview({ data, columns, config = {} }) {
                       ? getCfColor(val, config)
                       : null;
                     const mergeSpan = getCellMergeSpan(i, colIdx);
+                    const isHeaderRow = i < headerRows;
+                    const isHeaderCol = colIdx < headerCols;
+                    const isHeader = isHeaderRow || isHeaderCol;
+                    const CellTag = isHeader ? "th" : "td";
                     
                     return (
-                      <td
+                      <CellTag
                         key={col.name}
                         className={`${cellPadding} ${!config.nowrap ? "whitespace-nowrap" : ""}`}
                         rowSpan={mergeSpan?.rowSpan}
                         colSpan={mergeSpan?.colSpan}
                         style={{
-                          textAlign,
-                          color: isNum && config.highlightNumbers ? numberColor : undefined,
-                          background: cfColor || undefined,
-                          fontWeight: isNum && config.highlightNumbers ? 500 : undefined,
+                          textAlign: isHeaderCol && !isHeaderRow ? "left" : textAlign,
+                          color: isHeader ? headerText : (isNum && config.highlightNumbers ? numberColor : undefined),
+                          background: isHeader ? (cfColor || headerBg) : (cfColor || undefined),
+                          fontWeight: isHeader ? 600 : (isNum && config.highlightNumbers ? 500 : undefined),
                           overflowWrap: config.nowrap ? "break-word" : "normal",
+                          borderColor,
                         }}
                       >
                         {renderCellWithFootnotes(val, config.footnotes)}
-                      </td>
+                      </CellTag>
                     );
                   })}
                 </tr>
