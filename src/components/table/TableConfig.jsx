@@ -167,6 +167,7 @@ export default function TableConfig({ config, onChange, columns }) {
        <Toggle label="Sortering ved klikk" value={config.sortable !== false} onChange={v => set("sortable", v)} />
        <Toggle label="Vis radnummer" value={!!config.showRowNumbers} onChange={v => set("showRowNumbers", v)} />
        <Toggle label="Uthev tallkolonner" value={!!config.highlightNumbers} onChange={v => set("highlightNumbers", v)} />
+       <Toggle label="Tusenskilletegn på tall" value={!!config.thousandSeparator} onChange={v => set("thousandSeparator", v)} />
        <Toggle label="Ikke bryt tekst" value={!!config.nowrap} onChange={v => set("nowrap", v)} />
 
         <div className="space-y-1">

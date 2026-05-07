@@ -10,9 +10,22 @@ function getCfColor(value, config) {
   return config.cfMidColor || "#fef9c3";
 }
 
-function renderCellWithFootnotes(value, footnotes) {
-  if (!footnotes || footnotes.length === 0) return String(value ?? "");
-  const text = String(value ?? "");
+function formatValue(value, col, config) {
+  const raw = String(value ?? "");
+  if (config.thousandSeparator && col.type === "number") {
+    const num = parseFloat(raw.replace(/\s/g, "").replace(",", "."));
+    if (!isNaN(num) && raw.trim() !== "") {
+      const hasDecimals = raw.includes(",") || raw.includes(".");
+      return num.toLocaleString("nb-NO", hasDecimals ? {} : { maximumFractionDigits: 0 });
+    }
+  }
+  return raw;
+}
+
+function renderCellWithFootnotes(value, footnotes, col, config) {
+  const displayValue = formatValue(value, col, config);
+  if (!footnotes || footnotes.length === 0) return displayValue;
+  const text = displayValue;
   // Build list of [keyword, footnoteIndex] sorted by keyword length desc to avoid partial matches
   const refs = footnotes
     .map((fn, idx) => ({ keyword: (typeof fn === "string" ? "" : fn.keyword || ""), idx }))
@@ -229,7 +242,7 @@ export default function TablePreview({ data, columns, config = {} }) {
                           borderColor,
                         }}
                       >
-                        {renderCellWithFootnotes(val, config.footnotes)}
+                        {renderCellWithFootnotes(val, config.footnotes, col, config)}
                       </CellTag>
                     );
                   })}
