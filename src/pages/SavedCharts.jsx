@@ -217,7 +217,7 @@ export default function SavedCharts() {
     const matchFolder = activeFolder === null || c.folder === activeFolder;
     const matchDynamic = !filterDynamic || !!c.api_source;
     const matchApiExposed = !filterApi || !!c.exposed_in_api;
-    const matchType = !filterType || c.chart_type === filterType;
+    const matchType = !filterType || (filterType === "chart" ? (c.chart_type !== "table" && c.chart_type !== "barometer") : c.chart_type === filterType);
     return matchSearch && matchFolder && matchDynamic && matchApiExposed && matchType;
   });
 
