@@ -175,6 +175,7 @@ export default function SavedCharts() {
   const [activeFolder, setActiveFolder] = useState(null); // null = alle
   const [filterDynamic, setFilterDynamic] = useState(false);
   const [filterApi, setFilterApi] = useState(false);
+  const [filterType, setFilterType] = useState(null); // null = alle
   const navigate = useNavigate();
 
   const load = async () => {
@@ -216,7 +217,8 @@ export default function SavedCharts() {
     const matchFolder = activeFolder === null || c.folder === activeFolder;
     const matchDynamic = !filterDynamic || !!c.api_source;
     const matchApiExposed = !filterApi || !!c.exposed_in_api;
-    return matchSearch && matchFolder && matchDynamic && matchApiExposed;
+    const matchType = !filterType || c.chart_type === filterType;
+    return matchSearch && matchFolder && matchDynamic && matchApiExposed && matchType;
   });
 
   // Group by folder for display
@@ -354,6 +356,15 @@ export default function SavedCharts() {
               />
             </div>
             <div className="flex items-center gap-1.5 flex-wrap">
+                {[{ label: "Graf", value: "chart" }, { label: "Tabell", value: "table" }, { label: "Barometer", value: "barometer" }].map(t => (
+                  <button
+                    key={t.value}
+                    onClick={() => setFilterType(filterType === t.value ? null : t.value)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${filterType === t.value ? "bg-primary text-primary-foreground border-primary" : "bg-card text-muted-foreground border-border hover:bg-muted"}`}
+                  >
+                    {t.label}
+                  </button>
+                ))}
                 <button
                   onClick={() => setFilterDynamic(f => !f)}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${filterDynamic ? "bg-blue-500 text-white border-blue-500" : "bg-card text-muted-foreground border-border hover:bg-muted"}`}
