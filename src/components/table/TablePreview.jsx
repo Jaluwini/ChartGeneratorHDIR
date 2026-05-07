@@ -185,7 +185,7 @@ export default function TablePreview({ data, columns, config = {} }) {
                   style={{ color: headerText, borderColor, textAlign }}
                 >
                   <span className="inline-flex items-center gap-1">
-                    {aliases[col.name] ?? col.name}
+                    {renderCellWithFootnotes(aliases[col.name] ?? col.name, config.footnotes, col, config)}
                     {config.sortable !== false && (
                       sortCol === col.name
                         ? (sortDir === "asc" ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />)
