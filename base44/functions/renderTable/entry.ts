@@ -3,10 +3,6 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-    if (!user) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
-    }
 
     const url = new URL(req.url);
     const tableId = url.searchParams.get('id');
@@ -15,14 +11,9 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Missing table ID' }, { status: 400 });
     }
 
-    const saved = await base44.entities.SavedChart.get(tableId);
+    const saved = await base44.asServiceRole.entities.SavedChart.get(tableId);
     if (!saved || saved.chart_type !== 'table') {
       return Response.json({ error: 'Table not found' }, { status: 404 });
-    }
-
-    // Check authorization
-    if (saved.created_by !== user.email && user.role !== 'admin') {
-      return Response.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const config = saved.chart_config || {};
