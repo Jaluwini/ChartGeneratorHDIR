@@ -1,6 +1,7 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { Table2, BookMarked, RefreshCw, Save, ArrowLeft, Eye, Code2, Maximize2, X, Edit2, Plus } from "lucide-react";
+import { Table2, BookMarked, RefreshCw, Save, ArrowLeft, Eye, Code2, Maximize2, X, Edit2, Plus, Download } from "lucide-react";
+import html2canvas from "html2canvas";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import FileUploader from "@/components/chart/FileUploader";
@@ -116,6 +117,16 @@ export default function TableGenerator() {
   const [fullscreen, setFullscreen] = useState(false);
   const [showEditor, setShowEditor] = useState(false);
   const [editorFullscreen, setEditorFullscreen] = useState(false);
+  const tablePreviewRef = useRef(null);
+
+  const downloadAsImage = async () => {
+    if (!tablePreviewRef.current) return;
+    const canvas = await html2canvas(tablePreviewRef.current, { backgroundColor: config.tableBg || "#ffffff", scale: 2 });
+    const link = document.createElement("a");
+    link.download = `${config.title || "tabell"}.png`;
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+  };
 
   const createEmptyTable = () => {
     const newColumns = [
@@ -309,10 +320,16 @@ export default function TableGenerator() {
                 ))}
               </div>
               {activeTab === "preview" && (
-                <button onClick={() => setFullscreen(true)}
-                  className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-lg hover:bg-card border border-transparent hover:border-border">
-                  <Maximize2 className="w-3.5 h-3.5" />Fullskjerm
-                </button>
+                <div className="flex items-center gap-1.5">
+                  <button onClick={downloadAsImage}
+                    className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-lg hover:bg-card border border-transparent hover:border-border">
+                    <Download className="w-3.5 h-3.5" />Last ned bilde
+                  </button>
+                  <button onClick={() => setFullscreen(true)}
+                    className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors p-1.5 rounded-lg hover:bg-card border border-transparent hover:border-border">
+                    <Maximize2 className="w-3.5 h-3.5" />Fullskjerm
+                  </button>
+                </div>
               )}
             </div>
           )}
@@ -330,7 +347,9 @@ export default function TableGenerator() {
                 </motion.div>
               ) : activeTab === "preview" ? (
                 <motion.div key="preview" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="overflow-auto">
-                  <TablePreview data={data} columns={columns} config={config} />
+                  <div ref={tablePreviewRef}>
+                    <TablePreview data={data} columns={columns} config={config} />
+                  </div>
                 </motion.div>
               ) : (
                 <motion.div key="export" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="h-full min-h-[500px]">
