@@ -121,7 +121,10 @@ export default function TableGenerator() {
 
   const downloadAsImage = async () => {
     if (!tablePreviewRef.current) return;
+    const searchEl = tablePreviewRef.current.querySelector("input[type='text']")?.closest("div.px-4");
+    if (searchEl) searchEl.style.display = "none";
     const canvas = await html2canvas(tablePreviewRef.current, { backgroundColor: config.tableBg || "#ffffff", scale: 2 });
+    if (searchEl) searchEl.style.display = "";
     const link = document.createElement("a");
     link.download = `${config.title || "tabell"}.png`;
     link.href = canvas.toDataURL("image/png");
