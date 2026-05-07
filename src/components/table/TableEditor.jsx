@@ -217,10 +217,9 @@ export default function TableEditor({ data, columns, onDataChange, merges = [], 
                       ) : (
                         <div
                           onClick={(e) => {
-                            e.stopPropagation();
-                            startEdit(rowIdx, col.name);
+                            if (!selectMode) { e.stopPropagation(); startEdit(rowIdx, col.name); }
                           }}
-                          className="px-1 py-0.5 rounded cursor-pointer hover:bg-muted/50 transition-colors text-foreground/80 truncate max-w-[150px]"
+                          className={`px-1 py-0.5 rounded transition-colors text-foreground/80 truncate max-w-[150px] ${selectMode ? "cursor-pointer" : "cursor-text hover:bg-muted/50"}`}
                           title={String(row[col.name] ?? "")}
                         >
                           {String(row[col.name] ?? "")}
